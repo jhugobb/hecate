@@ -8,10 +8,13 @@
 
 namespace Geo {
 
+const float EPSILON = 0.0000001;
+
 class BBox {
   public:
     glm::vec3 minPoint;
     glm::vec3 maxPoint;
+
 
     BBox() {
       init();
@@ -91,7 +94,11 @@ bool point2DInsideTriangle(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c);
 
 bool triangleQuadintersectionTest(TriangleMesh* mesh, Triangle* t, glm::vec2 quad_min, glm::vec2 quad_max);
 
-bool testBoxTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::vec3 max_point, bool test2D);
+bool testBoxTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::vec3 max_point, bool test2D = false);
+
+bool isPointInQuad(glm::vec2 min_point, glm::vec2 max_point, glm::vec2 query_point);
+
+bool rayIntersectsTriangle(glm::vec3 rayOrigin, glm::vec3 rayVector, glm::vec3 v1_tri, glm::vec3 v2_tri, glm::vec3 v3_tri, glm::vec3& outIntersectionPoint);
 
 // AA infinite Paralelipipedae intersection triangle
 

@@ -30,8 +30,8 @@ class Quadtree {
   private:
     node* root = NULL;
     TriangleMesh* m;
-    void insert_recursive(int t, node* cell, TriangleMesh* mesh, int depth);
-
+    node* insert_recursive(int t, node* cell, TriangleMesh* mesh, int depth);
+    node* query_recursive(node* cell, glm::vec2 coords);
 };
 
 #endif

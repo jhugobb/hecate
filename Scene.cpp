@@ -9,8 +9,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 #include "imgui/imgui.h"
-#include "Scene.h"
 
+#include "Scene.h"
+#include "Grid.h"
 
 Scene::Scene()
 {
@@ -152,6 +153,12 @@ void Scene::render_gui()
 	ImGui::InputInt("##Gridsize", &grid_size, 50, 1);
 	grid_size = glm::max(0, glm::min(grid_size, 99999));
 	ImGui::Spacing();
+
+	if (ImGui::Button("Voxelize")) {
+		Grid grid(grid_size);
+		grid.colorGrid(mesh, quadtree);
+		std::cout << "Finished Voxelization" << std::endl;
+	}
 
 	// ImGui::Text("#Iterations: ");
 	// ImGui::SameLine();

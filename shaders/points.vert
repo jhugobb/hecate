@@ -15,7 +15,7 @@ void main()
 	// Transform position from pixel coordinates to clipping coordinates
 	gl_Position = projection * modelview * vec4(position, 1.0);
 	
-	fragColor = color;
+	fragColor = vec4(0.6, 0.6, 0.6, 1);
 	if(bLighting)
 		fragColor = fragColor * max(normalize(normalMatrix * normal).z, 0.0);
 	
