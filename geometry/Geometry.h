@@ -94,6 +94,8 @@ bool point2DInsideTriangle(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c);
 
 bool triangleQuadintersectionTest(TriangleMesh* mesh, Triangle* t, glm::vec2 quad_min, glm::vec2 quad_max);
 
+bool testQuadTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::vec3 max_point);
+
 bool testBoxTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::vec3 max_point, bool test2D = false);
 
 bool isPointInQuad(glm::vec2 min_point, glm::vec2 max_point, glm::vec2 query_point);

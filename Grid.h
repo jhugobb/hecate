@@ -3,7 +3,7 @@
 
 #include <map>
 #include <set>
-
+#include "geometry/Geometry.h"
 #include "geometry/Quadtree.h"
 
 class Grid {
@@ -16,22 +16,26 @@ class Grid {
 
   struct Voxel {
     VoxelColor color = VoxelColor::WHITE;
-    unsigned int z;
+    float z;
+    glm::vec3 normal;
     
-    bool operator <(const Voxel& other ) const {
-      return z < other.z;
+    bool operator <(const Voxel *other ) const {
+      return z < other->z;
     }
   };
 
   public:
     Grid() {};
-    Grid(unsigned int size);
+    Grid(unsigned int size, Geo::BBox space_);
     ~Grid() {}; // TODO
     void colorGrid(TriangleMesh* mesh, Quadtree qt);
+    void writePLY(std::string filename);
 
   private:
     unsigned int size_;
-    std::map<std::pair<unsigned int, unsigned int>, std::set<Voxel>> elements;
+    float node_size;
+    Geo::BBox space;
+    std::map<std::pair<unsigned int, unsigned int>, std::set<Voxel*>> elements;
 
 };
 #endif

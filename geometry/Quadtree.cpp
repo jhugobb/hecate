@@ -44,13 +44,16 @@ node* Quadtree::insert_recursive(int t, node* cell, TriangleMesh* mesh, int dept
 
           Triangle triangle = mesh->getTriangles()[tri];
           // can a triangle be in different cells?
-          if (Geo::testBoxTriangle(mesh, triangle, glm::vec3(cell->children[0]->min_point,0), glm::vec3(cell->children[0]->max_point,0), true)){
+          if (Geo::testQuadTriangle(mesh, triangle, glm::vec3(cell->children[0]->min_point,0), glm::vec3(cell->children[0]->max_point,0))){
             cell->children[0] = insert_recursive(tri, cell->children[0], mesh, depth+1);
-          } else if (Geo::testBoxTriangle(mesh, triangle, glm::vec3(cell->children[1]->min_point,0), glm::vec3(cell->children[1]->max_point,0), true)) {
+          } 
+          if (Geo::testQuadTriangle(mesh, triangle, glm::vec3(cell->children[1]->min_point,0), glm::vec3(cell->children[1]->max_point,0))) {
             cell->children[1] = insert_recursive(tri, cell->children[1], mesh, depth+1);
-          } else if (Geo::testBoxTriangle(mesh, triangle, glm::vec3(cell->children[2]->min_point,0), glm::vec3(cell->children[2]->max_point,0), true)) {
+          } 
+          if (Geo::testQuadTriangle(mesh, triangle, glm::vec3(cell->children[2]->min_point,0), glm::vec3(cell->children[2]->max_point,0))) {
             cell->children[2] = insert_recursive(tri, cell->children[2], mesh, depth+1);
-          } else {
+          }
+          if (Geo::testQuadTriangle(mesh, triangle, glm::vec3(cell->children[3]->min_point,0), glm::vec3(cell->children[3]->max_point,0))) {
             cell->children[3] = insert_recursive(tri, cell->children[3], mesh, depth+1);
           }
 
@@ -60,13 +63,16 @@ node* Quadtree::insert_recursive(int t, node* cell, TriangleMesh* mesh, int dept
       }
     } else {
       Triangle triangle = mesh->getTriangles()[t];
-      if (Geo::testBoxTriangle(mesh, triangle, glm::vec3(cell->children[0]->min_point,0), glm::vec3(cell->children[0]->max_point,0), true)){
+      if (Geo::testQuadTriangle(mesh, triangle, glm::vec3(cell->children[0]->min_point,0), glm::vec3(cell->children[0]->max_point,0))){
         cell->children[0] = insert_recursive(t, cell->children[0], mesh, depth+1);
-      } else if (Geo::testBoxTriangle(mesh, triangle, glm::vec3(cell->children[1]->min_point,0), glm::vec3(cell->children[1]->max_point,0), true)) {
+      } 
+      if (Geo::testQuadTriangle(mesh, triangle, glm::vec3(cell->children[1]->min_point,0), glm::vec3(cell->children[1]->max_point,0))) {
         cell->children[1] = insert_recursive(t, cell->children[1], mesh, depth+1);
-      } else if (Geo::testBoxTriangle(mesh, triangle, glm::vec3(cell->children[2]->min_point,0), glm::vec3(cell->children[2]->max_point,0), true)) {
+      } 
+      if (Geo::testQuadTriangle(mesh, triangle, glm::vec3(cell->children[2]->min_point,0), glm::vec3(cell->children[2]->max_point,0))) {
         cell->children[2] = insert_recursive(t, cell->children[2], mesh, depth+1);
-      } else {
+      }
+      if (Geo::testQuadTriangle(mesh, triangle, glm::vec3(cell->children[3]->min_point,0), glm::vec3(cell->children[3]->max_point,0))) {
         cell->children[3] = insert_recursive(t, cell->children[3], mesh, depth+1);
       }
     }

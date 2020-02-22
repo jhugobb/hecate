@@ -77,6 +77,20 @@ bool testAABoxAABox(Geo::BBox box1, Geo::BBox box2) {
   return (x1 && x2 && y1 && y2 && z1 && z2);
 }
 
+bool testPointsVsAxis2D(glm::vec2 v1, glm::vec2 v2, glm::vec2 v3, glm::vec2 axis, glm::vec2 h) {
+  float p0 = glm::dot(axis, v1);
+  float p1 = glm::dot(axis, v2);
+  float p2 = glm::dot(axis, v3);
+
+  float min_p = glm::min(p0, glm::min(p1,p2));
+  float max_p = glm::max(p0, glm::max(p1,p2));
+
+  float r = h.x * abs(axis.x) + h.y * abs(axis.y);
+
+  if (min_p > r || max_p < -r ) return false;
+  return true;
+}
+
 bool testPointsVsAxis(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 axis, glm::vec3 h) {
   float p0 = glm::dot(axis, v1);
   float p1 = glm::dot(axis, v2);
@@ -85,14 +99,69 @@ bool testPointsVsAxis(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 axis, 
   float min_p = glm::min(p0, glm::min(p1,p2));
   float max_p = glm::max(p0, glm::max(p1,p2));
 
-  const glm::vec3 e0 = glm::vec3(1,0,0);
-  const glm::vec3 e1 = glm::vec3(0,1,0);
-  const glm::vec3 e2 = glm::vec3(0,0,0);
-
   float r = h.x * abs(axis.x) + h.y * abs(axis.y) + h.z * abs(axis.z);
 
   if (min_p > r || max_p < -r ) return false;
   return true;
+}
+
+bool testQuadTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::vec3 max_point) {
+  Geo::BBox box;
+
+  box.addPoint(min_point);
+  box.addPoint(max_point);
+
+  glm::vec3 v1o, v2o, v3o;
+  std::vector<Triangle> tris = mesh->getTriangles();
+  std::vector<glm::vec3> vertices = mesh->getVertices();
+  
+  v1o = vertices[t.getV1()];
+  v2o = vertices[t.getV2()];
+  v3o = vertices[t.getV3()];
+
+
+  const glm::vec3 center_box = (box.minPoint + box.maxPoint) / 2.0f;
+
+  glm::vec3 v1 = v1o - center_box;
+  glm::vec3 v2 = v2o - center_box;
+  glm::vec3 v3 = v3o - center_box;
+  
+  v1.z = 0;    
+  v2.z = 0;    
+  v3.z = 0;    
+
+  glm::vec2 v1_2d = glm::vec2(v1.x, v1.y);
+  glm::vec2 v2_2d = glm::vec2(v2.x, v2.y);
+  glm::vec2 v3_2d = glm::vec2(v3.x, v3.y);
+  
+  Geo::BBox tri_bbox;
+
+  tri_bbox.addPoint(v1o);
+  tri_bbox.addPoint(v2o);
+  tri_bbox.addPoint(v3o);
+
+  if (testAABoxAABox(tri_bbox, box)) return true;
+
+  const glm::vec2 f1 = v2_2d-v1_2d;
+  const glm::vec2 f2 = v3_2d-v2_2d;
+  const glm::vec2 f3 = v1_2d-v3_2d;
+
+  glm::vec3 e = box.maxPoint - center_box; // Compute positive extents
+  glm::vec2 e_2d = glm::vec2(e.x, e.y);
+
+  glm::vec2 n1 = glm::vec2(f1.y, -f1.x);
+  glm::vec2 n2 = glm::vec2(f2.y, -f2.x);
+  glm::vec2 n3 = glm::vec2(f3.y, -f3.x);
+
+    if (!testPointsVsAxis2D(v1_2d, v2_2d, v3_2d, n1, e_2d) || 
+        !testPointsVsAxis2D(v1_2d, v2_2d, v3_2d, n2, e_2d) || 
+        !testPointsVsAxis2D(v1_2d, v2_2d, v3_2d, n3, e_2d))
+      {
+        return false;
+      }
+
+
+
 }
 
 
@@ -117,12 +186,6 @@ bool testBoxTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::v
   glm::vec3 v1 = v1o - center_box;
   glm::vec3 v2 = v2o - center_box;
   glm::vec3 v3 = v3o - center_box;
-  
-  if (test2D) {
-    v1.z = 0;    
-    v2.z = 0;    
-    v3.z = 0;    
-  }
 
   Geo::BBox tri_bbox;
 
@@ -138,24 +201,42 @@ bool testBoxTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::v
 
   glm::vec3 tri_normal = glm::normalize(glm::cross(f1, f2));
 
-
-  // Convert AABB to center-extents representation
-  glm::vec3 e = box.maxPoint - center_box; // Compute positive extents
-
-  // Compute the projection interval radius of b onto L(t) = b.c + t * p.n
-  float r = e[0]*glm::abs(tri_normal.x) + e[1]*glm::abs(tri_normal.y) + e[2]*glm::abs(tri_normal.z);
-
-  float d = tri_normal.x * v1.x + tri_normal.y * v1.y + tri_normal.z * v1.z;
-
-  // Compute distance of box center from plane
-  float s = glm::dot(tri_normal, center_box) - d;
+  glm::vec3 vector1, vector2;
   
-  // Intersection occurs when distance s falls within [-r,+r] interval
-  if (abs(s) <= r) return true;
+  float planeDistance = tri_normal.x * v1.x + tri_normal.y * v1.y + tri_normal.z + v1.z;
 
+  if(tri_normal.x >= 0) {
+    vector1.x = min_point.x;
+    vector2.x = max_point.x;
+  } else {
+    vector1.x = max_point.x;
+    vector2.x = min_point.x;
+  }
+  if(tri_normal.y >= 0) {
+    vector1.y = min_point.y;
+    vector2.y = max_point.y;
+  } else {
+    vector1.y = max_point.y;
+    vector2.y = min_point.y;
+  }
+  if(tri_normal.z >= 0) {
+    vector1.z = min_point.z;
+    vector2.z = max_point.z;
+  } else {
+    vector1.z = min_point.z;
+    vector2.z = max_point.z;
+  }
+  float posSide = (tri_normal.x * vector2.x)+(tri_normal.y * vector2.y)+(tri_normal.y * vector2.y)+planeDistance;
+  float negSide = (tri_normal.x * vector1.x)+(tri_normal.y * vector1.y)+(tri_normal.y * vector1.y)+planeDistance;
+  if(posSide <=  0 && negSide >= 0) {
+    //box intersects
+    return true;
+  }
+
+  glm::vec3 e = box.maxPoint - center_box; // Compute positive extents
   const glm::vec3 e0 = glm::vec3(1,0,0);
   const glm::vec3 e1 = glm::vec3(0,1,0);
-  const glm::vec3 e2 = glm::vec3(0,0,0);
+  const glm::vec3 e2 = glm::vec3(0,0,1);
 
   if (!testPointsVsAxis(v1, v2, v3, glm::cross(e0, f1), e) || 
       !testPointsVsAxis(v1, v2, v3, glm::cross(e1, f1), e) ||
@@ -192,7 +273,7 @@ bool rayIntersectsTriangle(glm::vec3 rayOrigin, glm::vec3 rayVector, glm::vec3 v
   u = f * glm::dot(s, h);
   if (u < 0.0 || u > 1.0)
     return false;
-  q = glm::cross(s, edge2);
+  q = glm::cross(s, edge1);
   v = f * glm::dot(rayVector, q);
   if (v < 0.0 || u + v > 1.0)
       return false;
@@ -202,7 +283,7 @@ bool rayIntersectsTriangle(glm::vec3 rayOrigin, glm::vec3 rayVector, glm::vec3 v
     outIntersectionPoint = rayOrigin + rayVector * t;
     return true;
   }
-  else // This means that there is a line intersection but not a ray intersection.
+  else // This means that there is a line intersection but not a ray intersection. 
     return false;
 }
 

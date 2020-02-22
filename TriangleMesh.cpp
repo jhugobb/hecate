@@ -59,6 +59,7 @@ bool TriangleMesh::load(const string &filename)
 	
 	// Read faces
 	triangles.clear();
+	std::vector<unsigned int> tris;
 	for(unsigned int i=0; i<nFaces; i++)
 	{
 		fin >> nVertsInFace;
@@ -66,10 +67,14 @@ bool TriangleMesh::load(const string &filename)
 			fin >> face[j];
 		for(unsigned int j=1; j<nVertsInFace-1; j++)
 		{
+			tris.push_back(face[0]);
+			tris.push_back(face[j]);
+			tris.push_back(face[j+1]);
 			Triangle t = Triangle(face[0], face[j], face[j+1]);
 			triangles.push_back(t);
 		}
 	}
+		std::cout << "size of tris: " << tris.size() << std::endl;
 	return true;
 }
 

@@ -7,6 +7,7 @@
 #include "ShaderProgram.h"
 #include "TriangleMesh.h"
 #include "geometry/Quadtree.h"
+#include "geometry/Geometry.h"
 
 
 // Scene contains all the entities of our application.
@@ -47,6 +48,8 @@ private:
 	float currentTime;
 
 	Quadtree quadtree;
+
+	Geo::BBox model_bbox;
 	
 	// GUI parameters
 	bool bLighting, bWireframe;

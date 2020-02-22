@@ -61,7 +61,7 @@ bool Scene::loadScan(const char *filename)
 	{
 		cout << "Triangle mesh " << filename << " loaded. ";
 		cout << mesh->getVertices().size() << " vertices. ";
-		cout << (mesh->getTriangles().size()/3) << " faces." << endl;
+		cout << (mesh->getTriangles().size()) << " faces." << endl;
 	}
 	else
 		return false;
@@ -73,7 +73,11 @@ bool Scene::loadScan(const char *filename)
 	getBBox(bbox);
 	center = (bbox[0] + bbox[1]) / 2.0f;
 	size = bbox[1] - bbox[0];
+	model_bbox.addPoint(bbox[0]);
+	model_bbox.addPoint(bbox[1]);
 	size = glm::vec3(glm::max(size.x, glm::max(size.y, size.z)));
+	std::cout << "min: " << bbox[0].x << " " << bbox[0].y << " " << bbox[0].z << std::endl;	
+	std::cout << "max: " << bbox[1].x << " " << bbox[1].y << " " << bbox[1].z << std::endl;	
 	matrix = glm::mat4(1.0f);
 	matrix = glm::scale(matrix, glm::vec3(1.0f - 0.1f, 1.0f - 0.1f, 1.0f - 0.1f) / size);
 	matrix = glm::translate(matrix, -center);
@@ -82,11 +86,14 @@ bool Scene::loadScan(const char *filename)
 	// Save original vertices for reload
 	originalVertices.clear();
 	copy(mesh->getVertices().begin(), mesh->getVertices().end(), std::back_inserter(originalVertices));
-	
+
+	std::cout << "Starting Quadtree Generation" << std::endl;	
 	quadtree = Quadtree(mesh);
 	for (uint i = 0; i < mesh->getTriangles().size(); i++) {
 		quadtree.insert(i);
+		// std::cout << "Done " << i << "." << std::endl;
 	}
+	std::cout << "Finished Quadtree" << std::endl;
 	return true;
 }
 
@@ -155,9 +162,11 @@ void Scene::render_gui()
 	ImGui::Spacing();
 
 	if (ImGui::Button("Voxelize")) {
-		Grid grid(grid_size);
+		Grid grid(grid_size, model_bbox);
 		grid.colorGrid(mesh, quadtree);
 		std::cout << "Finished Voxelization" << std::endl;
+		std::cout << "Writing PLY" << std::endl;
+		grid.writePLY("test.ply");
 	}
 
 	// ImGui::Text("#Iterations: ");
