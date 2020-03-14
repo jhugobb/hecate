@@ -68,7 +68,6 @@ bool Scene::loadScan(const char *filename)
 
 	// Compute global bounding box
 	glm::vec3 bbox[2], center, size;
-	glm::mat4 matrix;
 	
 	getBBox(bbox);
 	center = (bbox[0] + bbox[1]) / 2.0f;
@@ -78,22 +77,18 @@ bool Scene::loadScan(const char *filename)
 	size = glm::vec3(glm::max(size.x, glm::max(size.y, size.z)));
 	std::cout << "min: " << bbox[0].x << " " << bbox[0].y << " " << bbox[0].z << std::endl;	
 	std::cout << "max: " << bbox[1].x << " " << bbox[1].y << " " << bbox[1].z << std::endl;	
-	matrix = glm::mat4(1.0f);
-	matrix = glm::scale(matrix, glm::vec3(1.0f - 0.1f, 1.0f - 0.1f, 1.0f - 0.1f) / size);
-	matrix = glm::translate(matrix, -center);
-	transform(matrix);
+	mat = glm::mat4(1.0f);
+	mat = glm::scale(mat, glm::vec3(1.0f - 0.1f, 1.0f - 0.1f, 1.0f - 0.1f) / size);
+	mat = glm::translate(mat, -center);
+	// transform(matrix);
 	
 	// Save original vertices for reload
 	originalVertices.clear();
 	copy(mesh->getVertices().begin(), mesh->getVertices().end(), std::back_inserter(originalVertices));
-
-	std::cout << "Starting Quadtree Generation" << std::endl;	
-	quadtree = Quadtree(mesh);
-	for (uint i = 0; i < mesh->getTriangles().size(); i++) {
-		quadtree.insert(i);
-		// std::cout << "Done " << i << "." << std::endl;
+	
+	for (uint i = 0; i < mesh->getVertices().size(); i++) {
+		model_bbox.addPoint(mesh->getVertices()[i]);
 	}
-	std::cout << "Finished Quadtree" << std::endl;
 	return true;
 }
 
@@ -107,9 +102,9 @@ void Scene::render()
 	pointsProgram.use();
 	pointsProgram.setUniform1i("bLighting", int(bLighting));
 	pointsProgram.setUniform1i("bBlack", false);
-	pointsProgram.setUniformMatrix4f("projection", camera.getProjectionMatrix());
-	pointsProgram.setUniformMatrix4f("modelview", camera.getModelViewMatrix());
-	pointsProgram.setUniformMatrix3f("normalMatrix", glm::inverseTranspose(glm::mat3(camera.getModelViewMatrix())));
+	pointsProgram.setUniformMatrix4f("projection", mat *camera.getProjectionMatrix());
+	pointsProgram.setUniformMatrix4f("modelview", mat * camera.getModelViewMatrix());
+	pointsProgram.setUniformMatrix3f("normalMatrix", glm::inverseTranspose(glm::mat3(mat *camera.getModelViewMatrix())));
 	
 	if(bWireframe)
 	{
@@ -162,8 +157,18 @@ void Scene::render_gui()
 	ImGui::Spacing();
 
 	if (ImGui::Button("Voxelize")) {
+
+		std::cout << "Starting Two D Grid Generation" << std::endl;	
+		twodgrid = TwoDGrid(mesh, grid_size, model_bbox);
+		for (uint i = 0; i < mesh->getTriangles().size(); i++) {
+			twodgrid.insert(i);
+		}
+		std::cout << "Finished Two D Grid" << std::endl;
+
 		Grid grid(grid_size, model_bbox);
-		grid.colorGrid(mesh, quadtree);
+		cout << "Model bbox min: " << model_bbox.minPoint.x << " " << model_bbox.minPoint.y << " " << model_bbox.minPoint.z << endl; 
+		cout << "Model bbox max: " << model_bbox.maxPoint.x << " " << model_bbox.maxPoint.y << " " << model_bbox.maxPoint.z << endl; 
+		grid.colorGrid(mesh, twodgrid);
 		std::cout << "Finished Voxelization" << std::endl;
 		std::cout << "Writing PLY" << std::endl;
 		grid.writePLY("test.ply");

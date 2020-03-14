@@ -66,6 +66,15 @@ bool triangleQuadintersectionTest(TriangleMesh* mesh, Triangle* t, glm::vec2 qua
 
 }
 
+bool testAABoxAABox_2D(glm::vec2 min_box_1, glm::vec2 max_box_1, glm::vec2 min_box_2, glm::vec2 max_box_2) {
+  bool x1 = max_box_1.x >= min_box_2.x;
+  bool x2 = max_box_2.x >= min_box_1.x;
+  bool y1 = max_box_1.y >= min_box_2.y;
+  bool y2 = max_box_2.y >= min_box_1.y;
+
+  return (x1 && x2 && y1 && y2);
+}
+
 bool testAABoxAABox(Geo::BBox box1, Geo::BBox box2) {
   bool x1 = box1.maxPoint.x >= box2.minPoint.x;
   bool x2 = box2.maxPoint.x >= box1.minPoint.x;
@@ -105,11 +114,14 @@ bool testPointsVsAxis(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 axis, 
   return true;
 }
 
-bool testQuadTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::vec3 max_point) {
+bool testQuadTriangle(TriangleMesh* mesh, Triangle t, glm::vec2 min_point, glm::vec2 max_point) {
   Geo::BBox box;
 
-  box.addPoint(min_point);
-  box.addPoint(max_point);
+  glm::vec3 min_point_3d(0, min_point.x, min_point.y);
+  glm::vec3 max_point_3d(0, max_point.x, max_point.y);
+
+  box.addPoint(min_point_3d);
+  box.addPoint(max_point_3d);
 
   glm::vec3 v1o, v2o, v3o;
   std::vector<Triangle> tris = mesh->getTriangles();
@@ -126,13 +138,14 @@ bool testQuadTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::
   glm::vec3 v2 = v2o - center_box;
   glm::vec3 v3 = v3o - center_box;
   
-  v1.z = 0;    
-  v2.z = 0;    
-  v3.z = 0;    
+  // We ignore the X direction
+  v1.x = 0;    
+  v2.x = 0;    
+  v3.x = 0;    
 
-  glm::vec2 v1_2d = glm::vec2(v1.x, v1.y);
-  glm::vec2 v2_2d = glm::vec2(v2.x, v2.y);
-  glm::vec2 v3_2d = glm::vec2(v3.x, v3.y);
+  glm::vec2 v1_2d = glm::vec2(v1.y, v1.z);
+  glm::vec2 v2_2d = glm::vec2(v2.y, v2.z);
+  glm::vec2 v3_2d = glm::vec2(v3.y, v3.z);
   
   Geo::BBox tri_bbox;
 
@@ -140,14 +153,18 @@ bool testQuadTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::
   tri_bbox.addPoint(v2o);
   tri_bbox.addPoint(v3o);
 
-  if (testAABoxAABox(tri_bbox, box)) return true;
+  if (!testAABoxAABox_2D(glm::vec2(tri_bbox.minPoint.y, tri_bbox.minPoint.z), 
+                         glm::vec2(tri_bbox.maxPoint.y, tri_bbox.maxPoint.z),
+                         glm::vec2(box.minPoint.y, box.minPoint.z),
+                         glm::vec2(box.maxPoint.y, box.maxPoint.z)))
+    return false;
 
   const glm::vec2 f1 = v2_2d-v1_2d;
   const glm::vec2 f2 = v3_2d-v2_2d;
   const glm::vec2 f3 = v1_2d-v3_2d;
 
   glm::vec3 e = box.maxPoint - center_box; // Compute positive extents
-  glm::vec2 e_2d = glm::vec2(e.x, e.y);
+  glm::vec2 e_2d = glm::vec2(e.y, e.z);
 
   glm::vec2 n1 = glm::vec2(f1.y, -f1.x);
   glm::vec2 n2 = glm::vec2(f2.y, -f2.x);
@@ -159,9 +176,7 @@ bool testQuadTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::
       {
         return false;
       }
-
-
-
+  return true;
 }
 
 
@@ -193,8 +208,8 @@ bool testBoxTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::v
   tri_bbox.addPoint(v2o);
   tri_bbox.addPoint(v3o);
 
-  if (testAABoxAABox(tri_bbox, box)) return true;
-
+  if (!testAABoxAABox(tri_bbox, box)) return false;
+  
   const glm::vec3 f1 = v2-v1;
   const glm::vec3 f2 = v3-v2;
   const glm::vec3 f3 = v1-v3;
@@ -203,7 +218,7 @@ bool testBoxTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::v
 
   glm::vec3 vector1, vector2;
   
-  float planeDistance = tri_normal.x * v1.x + tri_normal.y * v1.y + tri_normal.z + v1.z;
+  float planeDistance = - (tri_normal.x * v1.x + tri_normal.y * v1.y + tri_normal.z + v1.z);
 
   if(tri_normal.x >= 0) {
     vector1.x = min_point.x;
@@ -229,8 +244,8 @@ bool testBoxTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::v
   float posSide = (tri_normal.x * vector2.x)+(tri_normal.y * vector2.y)+(tri_normal.y * vector2.y)+planeDistance;
   float negSide = (tri_normal.x * vector1.x)+(tri_normal.y * vector1.y)+(tri_normal.y * vector1.y)+planeDistance;
   if(posSide <=  0 && negSide >= 0) {
-    //box intersects
-    return true;
+    //box not intersects
+    return false;
   }
 
   glm::vec3 e = box.maxPoint - center_box; // Compute positive extents

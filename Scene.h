@@ -6,7 +6,7 @@
 #include "Camera.h"
 #include "ShaderProgram.h"
 #include "TriangleMesh.h"
-#include "geometry/Quadtree.h"
+#include "geometry/2Dgrid.h"
 #include "geometry/Geometry.h"
 
 
@@ -46,8 +46,8 @@ private:
 	TriangleMesh *mesh;
 	ShaderProgram pointsProgram;
 	float currentTime;
-
-	Quadtree quadtree;
+	glm::mat4 mat;
+	TwoDGrid twodgrid;
 
 	Geo::BBox model_bbox;
 	

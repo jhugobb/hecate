@@ -23,48 +23,56 @@ std::string string_format( const std::string& format, Args ... args )
 Grid::Grid(unsigned int size, Geo::BBox space_) {
   size_ = size;
   space = space_;
-  space.minPoint.x = space.minPoint.y = space.minPoint.z = min(space.minPoint.x, min(space.minPoint.y, space.minPoint.z));
-  space.maxPoint.x = space.maxPoint.y = space.maxPoint.z = max(space.maxPoint.x, max(space.maxPoint.y, space.maxPoint.z));
-  node_size = (space.maxPoint - space.minPoint).x/size;
-  for (unsigned int x = 0; x < size; x++) {
-    for (unsigned int y = 0; y < size; y++) {
+  glm::vec3 center_box = (space.maxPoint + space.minPoint)/2.0f;
+  glm::vec3 size_box = space.maxPoint - space.minPoint;
+  float largest = max(size_box.x, max(size_box.y, size_box.z));
+  space.minPoint = center_box - glm::vec3(largest, largest, largest)/2.0f;
+  space.maxPoint = center_box + glm::vec3(largest, largest, largest)/2.0f;
+  node_size = largest/size;
+  for (unsigned int y = 0; y < size; y++) {
+    for (unsigned int z = 0; z < size; z++) {
       std::set<Voxel*> s;
-      for (unsigned int z = 0; z < size; z++) {
+      for (unsigned int x = 0; x < size; x++) {
         Voxel* voxel = new Voxel();
-        voxel->z = space.minPoint.z + z * node_size;
+        voxel->x = space.minPoint.x + x * node_size;
         s.insert(voxel);
       }
-      elements.emplace(std::make_pair(x,y), s);
+      elements.emplace(std::make_pair(y,z), s);
     }
   }
+  cout << "Coords of min voxel: " << space.minPoint.x << " " << space.minPoint.y << " " << space.minPoint.z << endl
+       <<"                      " << space.minPoint.x + node_size << " " << space.minPoint.y + node_size << " " << space.minPoint.z + node_size << endl;
+  cout << "Coords of max voxel: " << space.minPoint.x + (size-2)*node_size << " " << space.minPoint.y + (size-2)*node_size << " " << space.minPoint.z + (size-2)*node_size << endl
+       <<"                      " << space.minPoint.x + (size-1)*node_size << " " << space.minPoint.y + (size-1)*node_size << " " << space.minPoint.z + (size-1)*node_size << endl;  
 }
 
-void Grid::colorGrid(TriangleMesh* mesh, Quadtree qt) {
+void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid qt) {
   std::vector<Triangle> triangles = mesh->getTriangles();
   std::vector<glm::vec3> vertices = mesh->getVertices();
-
-  for (unsigned int x = 0; x < size_; x++) {
-    for (unsigned int y = 0; y < size_; y++) {
+  for (unsigned int y = 0; y < size_; y++) {
+    for (unsigned int z = 0; z < size_; z++) {
       glm::vec2 coords;
-      coords.x = space.minPoint.x + x * node_size;
-      coords.y = space.minPoint.y + y * node_size;
-      node* quad_node = qt.query(coords);
+      coords.x = space.minPoint.y + y * node_size;
+      coords.y = space.minPoint.z + z * node_size;
+      node* quad_node = qt.query(glm::vec2(y,z));
       // std::vector<double> intersect_zs;
-
+      
       std::set<Voxel*>::iterator it;
-      for (it = elements[std::make_pair(x,y)].begin(); it != elements[std::make_pair(x,y)].end(); ++it) {
+      for (it = elements[std::make_pair(y,z)].begin(); it != elements[std::make_pair(y,z)].end(); ++it) {
         Voxel* v = *it;
         bool intersects_node = false;
-        for (unsigned int tri_idx : quad_node->members) {
-          Triangle t = triangles[tri_idx];
-          intersects_node = Geo::testBoxTriangle(mesh, t, glm::vec3(coords,v->z), glm::vec3(coords.x+node_size, coords.y+node_size, v->z+node_size));
-          if (intersects_node) {
-            glm::vec3 v1 = vertices[t.getV1()];
-            glm::vec3 v2 = vertices[t.getV2()];
-            glm::vec3 v3 = vertices[t.getV3()];
+        if (quad_node != NULL) {
+          for (unsigned int tri_idx : quad_node->members) {
+            Triangle t = triangles[tri_idx];
+            intersects_node = Geo::testBoxTriangle(mesh, t, glm::vec3(v->x,coords.x, coords.y), glm::vec3(v->x+node_size, coords.x+node_size, coords.y+node_size));
+            if (intersects_node) {
+              glm::vec3 v1 = vertices[t.getV1()];
+              glm::vec3 v2 = vertices[t.getV2()];
+              glm::vec3 v3 = vertices[t.getV3()];
 
-            v->normal = glm::normalize(glm::cross(v3-v2, v3-v1));
-            break;
+              v->normal = glm::normalize(glm::cross(v3-v2, v3-v1));
+              break;
+            }
           }
         }
         if (intersects_node){
@@ -142,12 +150,11 @@ void Grid::writePLY(std::string filename) {
 
   unsigned char r, g, b;
   r = g = b = 255u;
-
-  for (unsigned int x = 0; x < size_; x++) {
-    for (unsigned int y = 0; y < size_; y++) {
-      for (Voxel* v : elements[std::make_pair(x,y)]) {
+  
+  for (unsigned int y = 0; y < size_; y++) {
+    for (unsigned int z = 0; z < size_; z++) {
+      for (Voxel* v : elements[std::make_pair(y,z)]) {
         if (v->color == VoxelColor::GRAY) {
-          // std::cout<<"Hi there"<<std::endl;
 
           glm::vec3 n;
           n.x = static_cast<uint8_t>((v->normal.x * 0.5 + 0.5) * 255);
@@ -158,11 +165,10 @@ void Grid::writePLY(std::string filename) {
           b = glm::clamp(2*abs(int(n.z) - 128), 0, 255);
 
           char line[LINE_SIZE];
-
           out_fobj 
-                  << space.minPoint.x + x*node_size + node_size/2.f << " "
+                  << v->x << " "
                   << space.minPoint.y + y*node_size + node_size/2.f << " "
-                  << v->z << " "
+                  << space.minPoint.z + z*node_size + node_size/2.f << " "
                   << static_cast<int>(r) << " "
                   << static_cast<int>(g) << " "
                   << static_cast<int>(b)
