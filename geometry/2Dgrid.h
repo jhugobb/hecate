@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <list>
 #include <glm/glm.hpp>
 
 #include "Triangle.h"
@@ -10,6 +11,27 @@
 #include "Geometry.h"
 
 typedef std::pair<unsigned int, unsigned int> p_yz; 
+
+
+class BinTreeNode {
+  public:
+    BinTreeNode() {};
+    ~BinTreeNode() {}; 
+    glm::vec3 min_point;
+    glm::vec3 max_point;
+    int representative;
+    bool is_gray = false;
+};
+
+class BinTree {
+  public:
+    BinTree() {};
+    std::list<BinTreeNode*> nodes;
+    TriangleMesh* mesh_;
+    Geo::BBox bbox;
+    void subdivide_recursive();
+};
+
 
 class node {
   public:
@@ -19,6 +41,8 @@ class node {
     glm::vec2 min_point;
     glm::vec2 max_point;
     std::vector<int> members;
+
+    std::list<BinTreeNode*> build_bin_tree(TriangleMesh* mesh, Geo::BBox space, double min_node_size);
 };
 
 // Quadtree will manage node*

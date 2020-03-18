@@ -58,13 +58,19 @@ void TwoDGrid::insert(int t) {
       if (Geo::testQuadTriangle(m, tri, min_box, max_box)) {
         inserted = true;
         uint key = y * num_nodes + z;
-        if (grid.find(key) != grid.end()) {
-          grid[key]->members.push_back(t);
-        } else {
-          node* n = new node();
-          n->members.push_back(t);
-          grid.emplace(key, n);
+        #pragma omp critical 
+        {
+          if (grid.find(key) != grid.end()) {
+            grid[key]->members.push_back(t);
+          } else {
+            node* n = new node();
+            n->min_point = min_box;
+            n->max_point = max_box;
+            n->members.push_back(t);
+            grid.emplace(key, n);
+          }
         }
+        
       }
     }
   }
@@ -85,3 +91,53 @@ node* TwoDGrid::query(glm::vec2 coords) {
   return NULL;
 }
 
+std::list<BinTreeNode*> node::build_bin_tree(TriangleMesh* mesh, Geo::BBox space, double min_node_size) {
+  std::list<BinTreeNode*> result;
+  std::list<BinTreeNode*>::iterator it;
+
+  std::vector<Triangle> triangles = mesh->getTriangles();
+  // cout << "Coords of min node: " << space.minPoint.x << " " << min_point.x << " " << min_point.y << endl;
+  // cout << "Coords of max node: " << space.maxPoint.x << " " << max_point.x << " " << min_point.y << endl;
+  
+  BinTreeNode* btn = new BinTreeNode();
+  btn->min_point = glm::vec3(space.minPoint.x, min_point.x, min_point.y);
+  btn->max_point = glm::vec3(space.maxPoint.x, max_point.x, max_point.y);
+
+  result.push_back(btn);
+
+  it = result.begin();
+
+  bool needs_subdivision = true;
+  BinTreeNode* current;
+  while(it!=result.end()) {
+    needs_subdivision = false;
+    current = *it;
+    for (int tri_idx : members) {
+      if (Geo::testBoxTriangle(mesh, triangles[tri_idx], current->min_point, current->max_point)) {
+        if (abs(current->max_point.x - current->min_point.x)/2.0 < min_node_size) {
+          current->is_gray = true;
+          current->representative = tri_idx;
+          break;
+        } else {
+          needs_subdivision = true;
+          BinTreeNode* nbtn = new BinTreeNode();
+          double center = (current->min_point.x + current->max_point.x)/2.0;
+          nbtn->min_point = glm::vec3(current->min_point.x, min_point.x, min_point.y);
+          nbtn->max_point = glm::vec3(center, max_point.x, max_point.y);
+          current->min_point.x = center;
+          result.insert(it, nbtn);
+
+          --it;
+
+          break;
+        }
+      }
+    }
+    if (!needs_subdivision) ++it;
+  }
+
+  // for (BinTreeNode* n : result) {
+  //   assert(abs(n->max_point.x - n->min_point.x) >= min_node_size);
+  // }
+  return result;
+}

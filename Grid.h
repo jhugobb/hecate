@@ -19,8 +19,8 @@ class Grid {
     double x;
     glm::vec3 normal;
     
-    bool operator <(const Voxel *other ) const {
-      return x < other->x;
+    bool operator <(const Voxel other ) const {
+      return x < other.x;
     }
   };
 
@@ -35,7 +35,7 @@ class Grid {
     unsigned int size_;
     double node_size;
     Geo::BBox space;
-    std::map<std::pair<unsigned int, unsigned int>, std::set<Voxel*>> elements;
+    std::map<std::pair<unsigned int, unsigned int>, std::vector<Voxel*>> elements;
 
 };
 #endif

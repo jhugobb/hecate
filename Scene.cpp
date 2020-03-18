@@ -160,6 +160,7 @@ void Scene::render_gui()
 
 		std::cout << "Starting Two D Grid Generation" << std::endl;	
 		twodgrid = TwoDGrid(mesh, grid_size, model_bbox);
+		#pragma omp parallel for
 		for (uint i = 0; i < mesh->getTriangles().size(); i++) {
 			twodgrid.insert(i);
 		}

@@ -31,12 +31,13 @@ Grid::Grid(unsigned int size, Geo::BBox space_) {
   node_size = largest/size;
   for (unsigned int y = 0; y < size; y++) {
     for (unsigned int z = 0; z < size; z++) {
-      std::set<Voxel*> s;
+      std::vector<Voxel*> s;
       for (unsigned int x = 0; x < size; x++) {
         Voxel* voxel = new Voxel();
         voxel->x = space.minPoint.x + x * node_size;
-        s.insert(voxel);
+        s.push_back(voxel);
       }
+      
       elements.emplace(std::make_pair(y,z), s);
     }
   }
@@ -49,35 +50,47 @@ Grid::Grid(unsigned int size, Geo::BBox space_) {
 void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid qt) {
   std::vector<Triangle> triangles = mesh->getTriangles();
   std::vector<glm::vec3> vertices = mesh->getVertices();
+  #pragma omp parallel for
   for (unsigned int y = 0; y < size_; y++) {
+    #pragma omp parallel for
     for (unsigned int z = 0; z < size_; z++) {
       glm::vec2 coords;
       coords.x = space.minPoint.y + y * node_size;
       coords.y = space.minPoint.z + z * node_size;
       node* quad_node = qt.query(glm::vec2(y,z));
-      // std::vector<double> intersect_zs;
       
-      std::set<Voxel*>::iterator it;
-      for (it = elements[std::make_pair(y,z)].begin(); it != elements[std::make_pair(y,z)].end(); ++it) {
+      std::list<BinTreeNode*>::iterator list_it;
+      std::list<BinTreeNode*> nods;
+      if (quad_node != NULL) {
+        nods = quad_node->build_bin_tree(mesh, space, node_size);
+        list_it = nods.begin();
+      }
+
+      std::vector<Voxel*>::iterator it;
+      for (it = (elements[std::make_pair(y,z)].begin()); it != (elements[std::make_pair(y,z)].end()); ++it) {
         Voxel* v = *it;
         bool intersects_node = false;
         if (quad_node != NULL) {
-          for (unsigned int tri_idx : quad_node->members) {
-            Triangle t = triangles[tri_idx];
-            intersects_node = Geo::testBoxTriangle(mesh, t, glm::vec3(v->x,coords.x, coords.y), glm::vec3(v->x+node_size, coords.x+node_size, coords.y+node_size));
-            if (intersects_node) {
-              glm::vec3 v1 = vertices[t.getV1()];
-              glm::vec3 v2 = vertices[t.getV2()];
-              glm::vec3 v3 = vertices[t.getV3()];
-
-              v->normal = glm::normalize(glm::cross(v3-v2, v3-v1));
-              break;
-            }
+          while ((*list_it)->max_point.x <= v->x){
+            ++list_it;
           }
+          intersects_node = (*list_it)->is_gray;
         }
         if (intersects_node){
           v->color = VoxelColor::GRAY;
+          Triangle t = triangles[(*list_it)->representative];
+          glm::vec3 v1 = vertices[t.getV1()];
+          glm::vec3 v2 = vertices[t.getV2()];
+          glm::vec3 v3 = vertices[t.getV3()];
+
+          v->normal = glm::normalize(glm::cross(v3-v2, v3-v1));
         }
+      }
+      if (quad_node != NULL) {
+        for (BinTreeNode* n : nods) {
+          delete n;
+        }
+        nods.clear();
       }
       // for (Triangle t : triangles) {
       //   // Triangle t = triangles[tri_idx];
