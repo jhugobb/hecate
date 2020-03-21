@@ -5,6 +5,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
+#include <chrono>
+#include <time.h>
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
@@ -155,24 +157,42 @@ void Scene::render_gui()
 	ImGui::InputInt("##Gridsize", &grid_size, 50, 1);
 	grid_size = glm::max(0, glm::min(grid_size, 99999));
 	ImGui::Spacing();
-
+	
 	if (ImGui::Button("Voxelize")) {
 
 		std::cout << "Starting Two D Grid Generation" << std::endl;	
-		twodgrid = TwoDGrid(mesh, grid_size, model_bbox);
+		timespec begin, end_grid, begin_vox, end_vox, end;
+		clock_gettime(CLOCK_REALTIME, &begin);
+		
+		twodgrid = new TwoDGrid(mesh, grid_size, model_bbox);
 		#pragma omp parallel for
 		for (uint i = 0; i < mesh->getTriangles().size(); i++) {
-			twodgrid.insert(i);
+			twodgrid->insert(i);
 		}
-		std::cout << "Finished Two D Grid" << std::endl;
+		twodgrid->buildBinTrees();
+		clock_gettime(CLOCK_REALTIME, &end_grid);
+		
+
+		std::cout << "Finished Two D Grid in " << end_grid.tv_sec - begin.tv_sec << " s." << std::endl;
 
 		Grid grid(grid_size, model_bbox);
 		cout << "Model bbox min: " << model_bbox.minPoint.x << " " << model_bbox.minPoint.y << " " << model_bbox.minPoint.z << endl; 
 		cout << "Model bbox max: " << model_bbox.maxPoint.x << " " << model_bbox.maxPoint.y << " " << model_bbox.maxPoint.z << endl; 
+
+		// VOXELIZATION
+		clock_gettime(CLOCK_REALTIME, &begin_vox);
+		
 		grid.colorGrid(mesh, twodgrid);
-		std::cout << "Finished Voxelization" << std::endl;
+
+		clock_gettime(CLOCK_REALTIME, &end_vox);
+
+		std::cout << "Finished Voxelization in " << end_vox.tv_sec - begin_vox.tv_sec << " s." << std::endl;
 		std::cout << "Writing PLY" << std::endl;
 		grid.writePLY("test.ply");
+
+		clock_gettime(CLOCK_REALTIME, &end);
+		
+		std::cout << "Finished execution in " << end.tv_sec - begin.tv_sec << " s." << std::endl;
 	}
 
 	// ImGui::Text("#Iterations: ");

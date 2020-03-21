@@ -51,7 +51,7 @@ bool TriangleMesh::load(const string &filename)
 	
 	// Read vertices
 	vertices.clear();
-	for(unsigned int i=0; i<nPoints; i++)
+	for(int i=0; i<nPoints; i++)
 	{
 		fin >> P.x >> P.y >> P.z;
 		vertices.push_back(P);
@@ -59,13 +59,13 @@ bool TriangleMesh::load(const string &filename)
 	
 	// Read faces
 	triangles.clear();
-	std::vector<unsigned int> tris;
-	for(unsigned int i=0; i<nFaces; i++)
+	std::vector<int> tris;
+	for(int i=0; i<nFaces; i++)
 	{
 		fin >> nVertsInFace;
-		for(unsigned int j=0; j<nVertsInFace; j++)
+		for(int j=0; j<nVertsInFace; j++)
 			fin >> face[j];
-		for(unsigned int j=1; j<nVertsInFace-1; j++)
+		for(int j=1; j<nVertsInFace-1; j++)
 		{
 			tris.push_back(face[0]);
 			tris.push_back(face[j]);

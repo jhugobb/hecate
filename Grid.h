@@ -28,14 +28,35 @@ class Grid {
     Grid() {};
     Grid(unsigned int size, Geo::BBox space_);
     ~Grid() {}; // TODO
-    void colorGrid(TriangleMesh* mesh, TwoDGrid qt);
+    
+    /**
+     * Voxelizes the model
+     *
+     * @param mesh Triangle Mesh of the model to be voxelized
+     * @param qt 2Dgrid of the model that subdivided the space
+     */ 
+    void colorGrid(TriangleMesh* mesh, TwoDGrid* qt);
+
+    /**
+     * Creates a PLY model with the voxelization
+     *
+     * @param filename The name of the file to be created
+     */ 
     void writePLY(std::string filename);
 
   private:
-    unsigned int size_;
+    // Number of nodes in a dimension
+    uint size_;
+    
+    // Size of a grid node in any direction
     double node_size;
+
+    // Bounding Box of the model
     Geo::BBox space;
-    std::map<std::pair<unsigned int, unsigned int>, std::vector<Voxel*>> elements;
+
+    // Vector of voxels
+    // TODO change to only have a single row of voxels at any given point in time
+    std::vector<Voxel*> elements;
 
 };
 #endif

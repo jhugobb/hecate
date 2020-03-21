@@ -7,16 +7,37 @@ TwoDGrid::TwoDGrid() {}
 TwoDGrid::TwoDGrid(TriangleMesh* m_, int size, Geo::BBox space_) {
   glm::vec3 center_box = (space_.maxPoint + space_.minPoint)/2.0f;
   glm::vec3 size_box = space_.maxPoint - space_.minPoint;
+  // Make the cells cubic
   float largest = max(size_box.x, max(size_box.y, size_box.z));
   space.minPoint = center_box - glm::vec3(largest, largest, largest)/2.0f;
   space.maxPoint = center_box + glm::vec3(largest, largest, largest)/2.0f;
   node_size = largest/size;
   num_nodes = size;
   m = m_;
-  grid = std::unordered_map<uint, node*>();
+
+  // Allocate space for the 2Dgrid
+  grid = new node*[num_nodes*num_nodes];
+
+  for (int y = 0; y < num_nodes; y++) {
+    for (int z = 0; z < num_nodes; z++) {
+
+      glm::vec2 min_box = glm::vec2(space.minPoint.y, space.minPoint.z) + glm::vec2(y*node_size,z*node_size);
+      glm::vec2 max_box = glm::vec2(space.minPoint.y, space.minPoint.z) + glm::vec2((y+1)*node_size,(z+1)*node_size);
+      grid[y * num_nodes + z] = new node();
+      grid[y * num_nodes + z]->min_point = min_box;
+      grid[y * num_nodes + z]->max_point = max_box;
+      grid[y * num_nodes + z]->members = std::vector<int>();
+    }
+
+  }
 }
 
-TwoDGrid::~TwoDGrid() {}
+TwoDGrid::~TwoDGrid() {
+  for (int i = 0; i < num_nodes*num_nodes; i++) {
+    delete[] grid[i];
+  }
+  delete[] grid;
+}
 
 void TwoDGrid::insert(int t) {
   std::vector<Triangle> tris = m->getTriangles();
@@ -34,6 +55,7 @@ void TwoDGrid::insert(int t) {
   tri_box.addPoint(v2);
   tri_box.addPoint(v3);
 
+  // Save Bbox of triangle
   glm::vec3 min_box_tri = tri_box.minPoint;
   glm::vec3 max_box_tri = tri_box.maxPoint;
 
@@ -47,35 +69,38 @@ void TwoDGrid::insert(int t) {
   int initial_z_grid = std::max(min_box_tri.z / node_size - 1, 0.0);
   int final_z_grid = max_box_tri.z / node_size;
 
-  bool inserted = false;
-    // x * height * depth + y * depth + z
+  glm::vec2 min_box, max_box;
+  uint key;
+
   for (int y = initial_y_grid; y < final_y_grid + 1 && y < num_nodes; y++) {
     for (int z = initial_z_grid; z < final_z_grid + 1 && z < num_nodes; z++) {
+      key = y * num_nodes + z;
+      min_box = grid[key]->min_point;
+      max_box = grid[key]->max_point;
 
-      glm::vec2 min_box = glm::vec2(space.minPoint.y, space.minPoint.z) + glm::vec2(y*node_size,z*node_size);
-      glm::vec2 max_box = glm::vec2(space.minPoint.y, space.minPoint.z) + glm::vec2((y+1)*node_size,(z+1)*node_size);
-
+      // If node intersects the projection in X of the triangle
       if (Geo::testQuadTriangle(m, tri, min_box, max_box)) {
-        inserted = true;
-        uint key = y * num_nodes + z;
         #pragma omp critical 
         {
-          if (grid.find(key) != grid.end()) {
-            grid[key]->members.push_back(t);
-          } else {
-            node* n = new node();
-            n->min_point = min_box;
-            n->max_point = max_box;
-            n->members.push_back(t);
-            grid.emplace(key, n);
-          }
+          grid[key]->members.push_back(t);
         }
-        
       }
     }
   }
 
-  // std::cout << inserted << std::endl;
+}
+
+void TwoDGrid::buildBinTrees() {
+  #pragma omp parallel for
+  for (int y = 0; y < num_nodes; y++) {
+    #pragma omp parallel for
+    for (int z = 0; z < num_nodes; z++) {
+      int key = y*num_nodes + z;
+      // If node has triangles, calculate its bin tree
+      if (grid[key]->members.size() != 0)
+        grid[key]->build_bin_tree(m, space, node_size);
+    }
+  }
 }
 
 node* TwoDGrid::query(glm::vec2 coords) {
@@ -84,20 +109,14 @@ node* TwoDGrid::query(glm::vec2 coords) {
 
   uint key = y * num_nodes + z;
 
-  if (grid.find(key) != grid.end()) {
-    return grid[key];
-  } 
-
-  return NULL;
+  return grid[key];
 }
 
-std::list<BinTreeNode*> node::build_bin_tree(TriangleMesh* mesh, Geo::BBox space, double min_node_size) {
+void node::build_bin_tree(TriangleMesh* mesh, Geo::BBox space, double min_node_size) {
   std::list<BinTreeNode*> result;
   std::list<BinTreeNode*>::iterator it;
 
   std::vector<Triangle> triangles = mesh->getTriangles();
-  // cout << "Coords of min node: " << space.minPoint.x << " " << min_point.x << " " << min_point.y << endl;
-  // cout << "Coords of max node: " << space.maxPoint.x << " " << max_point.x << " " << min_point.y << endl;
   
   BinTreeNode* btn = new BinTreeNode();
   btn->min_point = glm::vec3(space.minPoint.x, min_point.x, min_point.y);
@@ -113,7 +132,9 @@ std::list<BinTreeNode*> node::build_bin_tree(TriangleMesh* mesh, Geo::BBox space
     needs_subdivision = false;
     current = *it;
     for (int tri_idx : members) {
+      // If triangle intersects node
       if (Geo::testBoxTriangle(mesh, triangles[tri_idx], current->min_point, current->max_point)) {
+        // We need to subdivide only if half the size of the cell is larger than the minimum size
         if (abs(current->max_point.x - current->min_point.x)/2.0 < min_node_size) {
           current->is_gray = true;
           current->representative = tri_idx;
@@ -127,17 +148,15 @@ std::list<BinTreeNode*> node::build_bin_tree(TriangleMesh* mesh, Geo::BBox space
           current->min_point.x = center;
           result.insert(it, nbtn);
 
+          // Make sure to go back and process the new cell
           --it;
 
           break;
         }
       }
     }
+    // Only advance if we didnt create new cells to be processed
     if (!needs_subdivision) ++it;
   }
-
-  // for (BinTreeNode* n : result) {
-  //   assert(abs(n->max_point.x - n->min_point.x) >= min_node_size);
-  // }
-  return result;
+  bin_tree = result;
 }

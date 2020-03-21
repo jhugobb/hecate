@@ -19,30 +19,31 @@ class BinTreeNode {
     ~BinTreeNode() {}; 
     glm::vec3 min_point;
     glm::vec3 max_point;
+
+    // Index of the triangle that represents this cell
     int representative;
     bool is_gray = false;
 };
 
-class BinTree {
-  public:
-    BinTree() {};
-    std::list<BinTreeNode*> nodes;
-    TriangleMesh* mesh_;
-    Geo::BBox bbox;
-    void subdivide_recursive();
-};
-
-
 class node {
   public:
     node() {};
-    // bool is_leaf = true; 
-    // node* children[4];
+    ~node() {
+      members.clear();
+    }
     glm::vec2 min_point;
     glm::vec2 max_point;
     std::vector<int> members;
+    std::list<BinTreeNode*> bin_tree;
 
-    std::list<BinTreeNode*> build_bin_tree(TriangleMesh* mesh, Geo::BBox space, double min_node_size);
+    /**
+     * Creates the X-Bin-tree of the node
+     *
+     * @param mesh The triangular mesh of the model
+     * @param space The bounding box of the model
+     * @param min_node_size the size of a voxel in any direction
+     */  
+    void build_bin_tree(TriangleMesh* mesh, Geo::BBox space, double min_node_size);
 };
 
 // Quadtree will manage node*
@@ -52,17 +53,42 @@ class TwoDGrid {
     TwoDGrid();
     TwoDGrid(TriangleMesh* mesh, int size, Geo::BBox space);
     ~TwoDGrid();
+
+    /**
+     * Inserts a triangle in the 2D grid
+     *
+     * @param t index of the triangle in the TriangleMesh triangles array
+     */ 
     void insert(int t);
+
+    /**
+     * Finds the 2Dgrid node that corresponds to a voxel
+     *
+     * @param coords The coordinates of the voxel that corresponds to an X-row of the 2D grid
+     * @return the node of the 2D grid that encompases the voxel
+     */ 
     node* query(glm::vec2 coords);
 
+    /**
+     * Creates the X-Bin-trees of all the nodes
+     */ 
+    void buildBinTrees();
+
   private:
-    std::unordered_map<uint, node*> grid;
+    // Array of nodes of the 2Dgrid
+    node** grid;
+
+    // Triangle mesh pointer of the model
     TriangleMesh* m;
+
+    // Number of nodes in a dimension
     int num_nodes;
+
+    // Size of a 2Dgrid node in any direction
     double node_size;
+
+    // Bounding Box of the model
     Geo::BBox space;
-    // node* insert_recursive(int t, node* cell, TriangleMesh* mesh, int depth);
-    // node* query_recursive(node* cell, glm::vec2 coords);
 };
 
 #endif

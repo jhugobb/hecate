@@ -1,70 +1,20 @@
 #include "Geometry.h"
 
 namespace Geo {
+
 bool point2DInsideTriangle(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c) {
     float as_x = p.x-a.x;
     float as_y = p.y-a.y;
 
     bool p_ab = (b.x-a.x)*as_y-(b.y-a.y)*as_x > 0;
 
-    if((c.x-a.x)*as_y-(c.y-a.y)*as_x > 0 == p_ab) return false;
+    if(((c.x-a.x)*as_y-(c.y-a.y)*as_x > 0) == p_ab) return false;
 
-    if((c.x-b.x)*(p.y-b.y)-(c.y-b.y)*(p.x-b.x) > 0 != p_ab) return false;
+    if(((c.x-b.x)*(p.y-b.y)-(c.y-b.y)*(p.x-b.x) > 0) != p_ab) return false;
 
     return true;
 }
 
-bool triangleQuadintersectionTest(TriangleMesh* mesh, Triangle* t, glm::vec2 quad_min, glm::vec2 quad_max) {
-
-
-  // Create 2d bbox for the triangle, and then the circumscribed circle of that box and the quad. 
-  // If the distance of their centers is less than the sum of their radiuses, then they do not intersect.
-
-  Geo::BBox tri_box;
-
-  // project triangle into z = 0 plane
-  std::vector<glm::vec3> vertices = mesh->getVertices();
-  glm::vec3 v1 = vertices[t->getV1()];
-  glm::vec3 v2 = vertices[t->getV2()];
-  glm::vec3 v3 = vertices[t->getV3()];
-
-  tri_box.addPoint(v1);
-  tri_box.addPoint(v2);
-  tri_box.addPoint(v3);
-
-  glm::vec2 tri_box_min_2d = glm::vec2(tri_box.minPoint.x, tri_box.minPoint.y);
-  glm::vec2 tri_box_max_2d = glm::vec2(tri_box.maxPoint.x, tri_box.maxPoint.y);
-  glm::vec2 center_tri_box =  (tri_box_min_2d + tri_box_max_2d) / 2.0f;
-  float radius_tri_box = glm::distance(tri_box_min_2d, center_tri_box);
-
-  glm::vec2 center_quad = (quad_min + quad_max) / 2.0f;
-  float radius_quad = glm::distance(quad_min, center_quad);
-
-  if (glm::distance(center_tri_box, center_quad) > radius_quad + radius_tri_box) {
-    return false;
-  }
-
-  // Check if any of the points of the triangle lie inside the quad
-  if (v1.x >= quad_min.x && v1.x <= quad_max.x && v1.y >= quad_min.y && v1.y <= quad_max.y ||
-      v2.x >= quad_min.x && v2.x <= quad_max.x && v2.y >= quad_min.y && v2.y <= quad_max.y ||
-      v3.x >= quad_min.x && v3.x <= quad_max.x && v3.y >= quad_min.y && v3.y <= quad_max.y)
-  {
-      return true;
-  }
-  
-  // Check if any of the points of the quad lie inside the triangle
-
-  if (point2DInsideTriangle(quad_min, v1, v2, v3)                          ||
-      point2DInsideTriangle(quad_max, v1, v2, v3)                          ||
-      point2DInsideTriangle(glm::vec2(quad_min.x, quad_max.y), v1, v2, v3) ||
-      point2DInsideTriangle(glm::vec2(quad_max.x, quad_min.y), v1, v2, v3)) 
-  {
-      return true;
-  }
-
-  return false;
-
-}
 
 bool testAABoxAABox_2D(glm::vec2 min_box_1, glm::vec2 max_box_1, glm::vec2 min_box_2, glm::vec2 max_box_2) {
   bool x1 = max_box_1.x >= min_box_2.x;
@@ -208,6 +158,7 @@ bool testBoxTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::v
   tri_bbox.addPoint(v2o);
   tri_bbox.addPoint(v3o);
 
+  // If their bounding boxes don't intersect, they definitely don't intersect
   if (!testAABoxAABox(tri_bbox, box)) return false;
   
   const glm::vec3 f1 = v2-v1;
@@ -267,11 +218,6 @@ bool testBoxTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::v
       }
 
   return true;
-}
-
-bool isPointInQuad(glm::vec2 min_point, glm::vec2 max_point, glm::vec2 query_point) {
-  return min_point.x <= query_point.x && min_point.y <= query_point.y 
-      && max_point.x >= query_point.x && max_point.y >= query_point.y;
 }
 
 bool rayIntersectsTriangle(glm::vec3 rayOrigin, glm::vec3 rayVector, glm::vec3 v1_tri, glm::vec3 v2_tri, glm::vec3 v3_tri, glm::vec3& outIntersectionPoint) {

@@ -10,6 +10,7 @@
 #include "geometry/Geometry.h"
 
 
+// Necessary to Write PLY
 template<typename ... Args>
 std::string string_format( const std::string& format, Args ... args )
 {
@@ -23,22 +24,27 @@ std::string string_format( const std::string& format, Args ... args )
 Grid::Grid(unsigned int size, Geo::BBox space_) {
   size_ = size;
   space = space_;
+
+  // Make voxels cubic
   glm::vec3 center_box = (space.maxPoint + space.minPoint)/2.0f;
   glm::vec3 size_box = space.maxPoint - space.minPoint;
   float largest = max(size_box.x, max(size_box.y, size_box.z));
   space.minPoint = center_box - glm::vec3(largest, largest, largest)/2.0f;
   space.maxPoint = center_box + glm::vec3(largest, largest, largest)/2.0f;
   node_size = largest/size;
-  for (unsigned int y = 0; y < size; y++) {
-    for (unsigned int z = 0; z < size; z++) {
-      std::vector<Voxel*> s;
-      for (unsigned int x = 0; x < size; x++) {
+  uint key;
+
+  // Create Voxel Grid
+  elements = std::vector<Voxel*>(size*size*size, NULL);
+  for (uint y = 0; y < size; y++) {
+    for (uint z = 0; z < size; z++) {
+      for (uint x = 0; x < size; x++) {
+        key = y*size*size + z*size + x;
         Voxel* voxel = new Voxel();
         voxel->x = space.minPoint.x + x * node_size;
-        s.push_back(voxel);
+        elements[key] = voxel;
       }
-      
-      elements.emplace(std::make_pair(y,z), s);
+
     }
   }
   cout << "Coords of min voxel: " << space.minPoint.x << " " << space.minPoint.y << " " << space.minPoint.z << endl
@@ -47,7 +53,7 @@ Grid::Grid(unsigned int size, Geo::BBox space_) {
        <<"                      " << space.minPoint.x + (size-1)*node_size << " " << space.minPoint.y + (size-1)*node_size << " " << space.minPoint.z + (size-1)*node_size << endl;  
 }
 
-void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid qt) {
+void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt) {
   std::vector<Triangle> triangles = mesh->getTriangles();
   std::vector<glm::vec3> vertices = mesh->getVertices();
   #pragma omp parallel for
@@ -55,43 +61,43 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid qt) {
     #pragma omp parallel for
     for (unsigned int z = 0; z < size_; z++) {
       glm::vec2 coords;
+      // Coords of voxel in the 2D grid dimensions
       coords.x = space.minPoint.y + y * node_size;
       coords.y = space.minPoint.z + z * node_size;
-      node* quad_node = qt.query(glm::vec2(y,z));
+      node* quad_node = qt->query(glm::vec2(y,z));
       
       std::list<BinTreeNode*>::iterator list_it;
       std::list<BinTreeNode*> nods;
-      if (quad_node != NULL) {
-        nods = quad_node->build_bin_tree(mesh, space, node_size);
+      if (quad_node->members.size() != 0) {
+        nods = quad_node->bin_tree;
         list_it = nods.begin();
-      }
-
-      std::vector<Voxel*>::iterator it;
-      for (it = (elements[std::make_pair(y,z)].begin()); it != (elements[std::make_pair(y,z)].end()); ++it) {
-        Voxel* v = *it;
-        bool intersects_node = false;
-        if (quad_node != NULL) {
-          while ((*list_it)->max_point.x <= v->x){
-            ++list_it;
+      
+        for (uint x = 0; x < size_; x++) {
+          Voxel* v = elements[y*size_*size_+z*size_+x];
+          bool intersects_node = false;
+          if (quad_node->members.size() != 0) {
+            while ((*list_it)->max_point.x <= v->x){
+              ++list_it;
+            }
+            intersects_node = (*list_it)->is_gray;
           }
-          intersects_node = (*list_it)->is_gray;
-        }
-        if (intersects_node){
-          v->color = VoxelColor::GRAY;
-          Triangle t = triangles[(*list_it)->representative];
-          glm::vec3 v1 = vertices[t.getV1()];
-          glm::vec3 v2 = vertices[t.getV2()];
-          glm::vec3 v3 = vertices[t.getV3()];
+          if (intersects_node){
+            v->color = VoxelColor::GRAY;
+            Triangle t = triangles[(*list_it)->representative];
+            glm::vec3 v1 = vertices[t.getV1()];
+            glm::vec3 v2 = vertices[t.getV2()];
+            glm::vec3 v3 = vertices[t.getV3()];
 
-          v->normal = glm::normalize(glm::cross(v3-v2, v3-v1));
+            v->normal = glm::normalize(glm::cross(v3-v2, v3-v1));
+          }
         }
       }
-      if (quad_node != NULL) {
-        for (BinTreeNode* n : nods) {
-          delete n;
-        }
-        nods.clear();
-      }
+      // if (quad_node->members.size() != 0) {
+      //   for (BinTreeNode* n : nods) {
+      //     delete n;
+      //   }
+      //   nods.clear();
+      // }
       // for (Triangle t : triangles) {
       //   // Triangle t = triangles[tri_idx];
       //   glm::vec3 intersection_point;
@@ -158,15 +164,15 @@ void Grid::writePLY(std::string filename) {
           << "property uchar blue\r\n"
           << "end_header\r\n";
 
-  unsigned int num_points = 0;
-  const unsigned int LINE_SIZE = (20u-1u)*3u + 17u; // (CHARS_PER_COORD-1)*3 position, 3*3 color, 5 spaces, 2 endl, 1 null
+  uint num_points = 0;
 
   unsigned char r, g, b;
   r = g = b = 255u;
   
-  for (unsigned int y = 0; y < size_; y++) {
-    for (unsigned int z = 0; z < size_; z++) {
-      for (Voxel* v : elements[std::make_pair(y,z)]) {
+  for (uint y = 0; y < size_; y++) {
+    for (uint z = 0; z < size_; z++) {
+      for (uint x = 0; x < size_; x++) {
+        Voxel* v = elements[y*size_*size_+z*size_+x];
         if (v->color == VoxelColor::GRAY) {
 
           glm::vec3 n;
@@ -177,7 +183,6 @@ void Grid::writePLY(std::string filename) {
           g = glm::clamp(2*abs(int(n.y) - 128), 0, 255);
           b = glm::clamp(2*abs(int(n.z) - 128), 0, 255);
 
-          char line[LINE_SIZE];
           out_fobj 
                   << v->x << " "
                   << space.minPoint.y + y*node_size + node_size/2.f << " "

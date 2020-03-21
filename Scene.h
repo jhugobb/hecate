@@ -47,7 +47,7 @@ private:
 	ShaderProgram pointsProgram;
 	float currentTime;
 	glm::mat4 mat;
-	TwoDGrid twodgrid;
+	TwoDGrid* twodgrid;
 
 	Geo::BBox model_bbox;
 	
