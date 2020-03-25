@@ -1,6 +1,7 @@
 #include "2Dgrid.h"
 
 #include <iostream>
+#include <map>
 
 TwoDGrid::TwoDGrid() {}
 
@@ -91,6 +92,11 @@ void TwoDGrid::insert(int t) {
 }
 
 void TwoDGrid::buildBinTrees() {
+
+  #pragma omp parallel
+  for (uint i = 0; i < m->getTriangles().size(); i++) {
+    m->getTriangles()[i].saveMinX(m);
+  }
   #pragma omp parallel for
   for (int y = 0; y < num_nodes; y++) {
     #pragma omp parallel for
@@ -117,27 +123,39 @@ void node::build_bin_tree(TriangleMesh* mesh, Geo::BBox space, double min_node_s
   std::list<BinTreeNode*>::iterator it;
 
   std::vector<Triangle> triangles = mesh->getTriangles();
-  
+  std::map<Triangle, int> reference;
+
   BinTreeNode* btn = new BinTreeNode();
   btn->min_point = glm::vec3(space.minPoint.x, min_point.x, min_point.y);
   btn->max_point = glm::vec3(space.maxPoint.x, max_point.x, max_point.y);
 
+  for (int t : members) {
+    btn->triangles.insert(triangles[t]);
+    reference.emplace(triangles[t], t);
+  }
+
   result.push_back(btn);
 
-  it = result.begin();
 
+
+  it = result.begin();
   bool needs_subdivision = true;
   BinTreeNode* current;
+  std::multiset<Triangle>::iterator it_tri, current_it_tri;
+  
   while(it!=result.end()) {
     needs_subdivision = false;
     current = *it;
-    for (int tri_idx : members) {
+    it_tri = current->triangles.begin();
+    while(it_tri != current->triangles.end()) {
+      current_it_tri = it_tri++;
+      Triangle t = *current_it_tri;
       // If triangle intersects node
-      if (Geo::testBoxTriangle(mesh, triangles[tri_idx], current->min_point, current->max_point)) {
+      if (t.min_x <= current->max_point.x && Geo::testBoxTriangle(mesh, t, current->min_point, current->max_point)) {
         // We need to subdivide only if half the size of the cell is larger than the minimum size
         if (abs(current->max_point.x - current->min_point.x)/2.0 < min_node_size) {
           current->is_gray = true;
-          current->representative = tri_idx;
+          current->representative = reference[t];
           break;
         } else {
           needs_subdivision = true;
@@ -145,6 +163,7 @@ void node::build_bin_tree(TriangleMesh* mesh, Geo::BBox space, double min_node_s
           double center = (current->min_point.x + current->max_point.x)/2.0;
           nbtn->min_point = glm::vec3(current->min_point.x, min_point.x, min_point.y);
           nbtn->max_point = glm::vec3(center, max_point.x, max_point.y);
+          nbtn->triangles = std::multiset<Triangle>(current->triangles);
           current->min_point.x = center;
           result.insert(it, nbtn);
 
@@ -153,6 +172,8 @@ void node::build_bin_tree(TriangleMesh* mesh, Geo::BBox space, double min_node_s
 
           break;
         }
+      } else {
+        current->triangles.erase(current_it_tri);
       }
     }
     // Only advance if we didnt create new cells to be processed

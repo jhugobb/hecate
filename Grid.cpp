@@ -75,12 +75,10 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt) {
         for (uint x = 0; x < size_; x++) {
           Voxel* v = elements[y*size_*size_+z*size_+x];
           bool intersects_node = false;
-          if (quad_node->members.size() != 0) {
             while ((*list_it)->max_point.x <= v->x){
               ++list_it;
             }
             intersects_node = (*list_it)->is_gray;
-          }
           if (intersects_node){
             v->color = VoxelColor::GRAY;
             Triangle t = triangles[(*list_it)->representative];

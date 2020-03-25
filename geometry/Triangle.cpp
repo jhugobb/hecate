@@ -1,4 +1,8 @@
+#include <glm/common.hpp>
+#include <vector>
+
 #include "Triangle.h"
+#include "../TriangleMesh.h"
 
 Triangle::Triangle(unsigned int v1_, unsigned int v2_, unsigned int v3_) {
   v1 = v1_;
@@ -19,3 +23,13 @@ unsigned int Triangle::getV3() {
 }
 
 Triangle::~Triangle() {}
+
+void Triangle::saveMinX(TriangleMesh* m) {
+  std::vector<glm::vec3> verts = m->getVertices();
+
+  glm::vec3 v1_v = verts[v1];
+  glm::vec3 v2_v = verts[v2];
+  glm::vec3 v3_v = verts[v3];
+
+  min_x = std::min(v1_v.x, std::min(v2_v.x, v3_v.x));
+}

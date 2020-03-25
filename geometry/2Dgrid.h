@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <list>
+#include <set>
 #include <glm/glm.hpp>
 
 #include "Triangle.h"
@@ -19,7 +20,7 @@ class BinTreeNode {
     ~BinTreeNode() {}; 
     glm::vec3 min_point;
     glm::vec3 max_point;
-
+    std::multiset<Triangle> triangles;
     // Index of the triangle that represents this cell
     int representative;
     bool is_gray = false;
