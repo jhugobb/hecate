@@ -40,6 +40,7 @@ void Scene::init()
 	
 	bLighting = true;
 	bWireframe = false;
+	useNaive = false;
 	// lambda = 1.f;
 	// selectedIterativeFunction = 0;
 	// selectedGlobalFunction = 0;
@@ -143,6 +144,12 @@ void Scene::render_gui()
 	ImGui::Spacing();
 	ImGui::Checkbox("Wireframe", &bWireframe);
 	ImGui::Spacing();
+	ImGui::Separator();
+
+	// Voxelization Options
+	ImGui::Text("Voxelization Options");
+	ImGui::Spacing();
+	ImGui::Checkbox("Use Naive?", &useNaive);
 
 	ImGui::Separator();
 	ImGui::Spacing();
@@ -169,10 +176,11 @@ void Scene::render_gui()
 		for (uint i = 0; i < mesh->getTriangles().size(); i++) {
 			twodgrid->insert(i);
 		}
-		twodgrid->buildBinTrees();
+		if (!useNaive)
+			twodgrid->buildBinTrees();
+		
 		clock_gettime(CLOCK_REALTIME, &end_grid);
 		
-
 		std::cout << "Finished Two D Grid in " << end_grid.tv_sec - begin.tv_sec << " s." << std::endl;
 
 		Grid grid(grid_size, model_bbox);
@@ -182,7 +190,7 @@ void Scene::render_gui()
 		// VOXELIZATION
 		clock_gettime(CLOCK_REALTIME, &begin_vox);
 		
-		grid.colorGrid(mesh, twodgrid);
+		grid.colorGrid(mesh, twodgrid, useNaive);
 
 		clock_gettime(CLOCK_REALTIME, &end_vox);
 

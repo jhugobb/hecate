@@ -53,6 +53,7 @@ private:
 	
 	// GUI parameters
 	bool bLighting, bWireframe;
+	bool useNaive;
 	int grid_size;
 	
 	vector<glm::vec3> originalVertices;

@@ -53,7 +53,7 @@ Grid::Grid(unsigned int size, Geo::BBox space_) {
        <<"                      " << space.minPoint.x + (size-1)*node_size << " " << space.minPoint.y + (size-1)*node_size << " " << space.minPoint.z + (size-1)*node_size << endl;  
 }
 
-void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt) {
+void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive) {
   std::vector<Triangle> triangles = mesh->getTriangles();
   std::vector<glm::vec3> vertices = mesh->getVertices();
   #pragma omp parallel for
@@ -69,19 +69,32 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt) {
       std::list<BinTreeNode*>::iterator list_it;
       std::list<BinTreeNode*> nods;
       if (quad_node->members.size() != 0) {
-        nods = quad_node->bin_tree;
-        list_it = nods.begin();
-      
+        if (!useNaive) {
+          nods = quad_node->bin_tree;
+          list_it = nods.begin();
+        }
         for (uint x = 0; x < size_; x++) {
           Voxel* v = elements[y*size_*size_+z*size_+x];
           bool intersects_node = false;
+          int representative = -1;
+          if (useNaive) {
+            for (int tri_idx : quad_node->members) {
+              if (Geo::testBoxTriangle(mesh, triangles[tri_idx], glm::vec3(v->x, coords.x, coords.y), glm::vec3(v->x + node_size, coords.x + node_size, coords.y + node_size))) {
+                intersects_node = true;
+                representative = tri_idx;
+                break;
+              }
+            }
+          } else {
             while ((*list_it)->max_point.x <= v->x){
               ++list_it;
             }
             intersects_node = (*list_it)->is_gray;
+            representative = (*list_it)->representative;
+          }
           if (intersects_node){
             v->color = VoxelColor::GRAY;
-            Triangle t = triangles[(*list_it)->representative];
+            Triangle t = triangles[representative];
             glm::vec3 v1 = vertices[t.getV1()];
             glm::vec3 v2 = vertices[t.getV2()];
             glm::vec3 v3 = vertices[t.getV3()];
