@@ -150,7 +150,8 @@ void Scene::render_gui()
 	ImGui::Text("Voxelization Options");
 	ImGui::Spacing();
 	ImGui::Checkbox("Use Naive?", &useNaive);
-
+	ImGui::Spacing();
+	ImGui::Checkbox("Calculate Black and White?", &calculate_black_white);
 	ImGui::Separator();
 	ImGui::Spacing();
 
@@ -190,14 +191,14 @@ void Scene::render_gui()
 		// VOXELIZATION
 		clock_gettime(CLOCK_REALTIME, &begin_vox);
 		
-		grid.colorGrid(mesh, twodgrid, useNaive, "test.ply");
+		grid.colorGrid(mesh, twodgrid, useNaive, calculate_black_white, "test.ply");
 
 		clock_gettime(CLOCK_REALTIME, &end_vox);
 
 		std::cout << "Finished Voxelization in " << end_vox.tv_sec - begin_vox.tv_sec << " s." << std::endl;
 		// grid.writePLY("test.ply");
 		delete twodgrid;
-		
+
 		clock_gettime(CLOCK_REALTIME, &end);
 		
 		std::cout << "Finished execution in " << end.tv_sec - begin.tv_sec << " s." << std::endl;

@@ -35,9 +35,10 @@ class Grid {
      * @param mesh Triangle Mesh of the model to be voxelized
      * @param qt 2Dgrid of the model that subdivided the space
      * @param useNaive boolean that dictates if the naive approach should be used
+     * @param calculate_b_w boolean that dictates if black and white coloring should be calculated
      * @param filename name of the file where to save the voxelization
      */ 
-    void colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, std::string filename);
+    void colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, bool calculate_b_w, std::string filename);
 
     /**
      * Creates a PLY model with the voxelization
@@ -58,7 +59,7 @@ class Grid {
 
     // Vector of voxels
     // TODO change to only have a single row of voxels at any given point in time
-    std::vector<Voxel*> elements;
+    std::vector<Voxel> elements;
 
 };
 #endif

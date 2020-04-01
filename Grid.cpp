@@ -32,14 +32,14 @@ Grid::Grid(unsigned int size, Geo::BBox space_) {
   space.minPoint = center_box - glm::vec3(largest, largest, largest)/2.0f;
   space.maxPoint = center_box + glm::vec3(largest, largest, largest)/2.0f;
   node_size = largest/size;
+  // elements = std::vector<Voxel>();
 }
 
-void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, std::string filename) {
+void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, bool calculate_b_w, std::string filename) {
   std::vector<Triangle> triangles = mesh->getTriangles();
   std::vector<glm::vec3> vertices = mesh->getVertices();
 
   std::ofstream out_fobj(filename);
-
   out_fobj<< "ply\r\n"
           << "format ascii 1.0\r\n";
   auto file_verts_line = out_fobj.tellp();
@@ -60,23 +60,33 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, std::strin
     #pragma omp parallel for
     for (unsigned int z = 0; z < size_; z++) {
       glm::vec2 coords;
+      std::vector<Voxel> voxels;
+
       // Coords of voxel in the 2D grid dimensions
       coords.x = space.minPoint.y + y * node_size;
       coords.y = space.minPoint.z + z * node_size;
+
+      // 2Dgrid node that has the triangles for this y z 
       node* quad_node = qt->query(glm::vec2(y,z));
       
       std::list<BinTreeNode*>::iterator list_it;
       std::list<BinTreeNode*> nods;
+
+      // If the node has triangles
       if (quad_node->members.size() != 0) {
         if (!useNaive) {
           nods = quad_node->bin_tree;
           list_it = nods.begin();
         }
         for (uint x = 0; x < size_; x++) {
+          Voxel v;
+          // coordinate in world space
           double x_coord = space.minPoint.x + x * node_size;
+
           bool intersects_node = false;
           int representative = -1;
           if (useNaive) {
+            // Naive approach: for each triangle in the node, check if intersects the voxel
             for (int tri_idx : quad_node->members) {
               if (Geo::testBoxTriangle(mesh, triangles[tri_idx], glm::vec3(x_coord, coords.x, coords.y), glm::vec3(x_coord + node_size, coords.x + node_size, coords.y + node_size))) {
                 intersects_node = true;
@@ -85,6 +95,7 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, std::strin
               }
             }
           } else {
+            // Non naive approach: Follow the bin tree until finding the node that represents this voxel
             while ((*list_it)->max_point.x <= x_coord){
               ++list_it;
             }
@@ -92,8 +103,7 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, std::strin
             representative = (*list_it)->representative;
           }
           if (intersects_node){
-            // v->color = VoxelColor::GRAY;
-
+            v.color = VoxelColor::GRAY;
             glm::vec3 normal;
             Triangle t = triangles[representative];
             glm::vec3 v1 = vertices[t.getV1()];
@@ -123,60 +133,52 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, std::strin
               num_points++;
             }
           }
+          if (calculate_b_w) {
+            #pragma omp critical
+            {
+                voxels.push_back(v);
+            }
+          }
+
+        }
+        if (calculate_b_w) {
+          std::vector<double> intersect_xs;
+          for (int tri_idx : quad_node->members) {
+            glm::vec3 intersection_point;
+            glm::vec3 v1, v2, v3;
+            Triangle t = triangles[tri_idx];
+            v1 = vertices[t.getV1()];
+            v2 = vertices[t.getV2()];
+            v3 = vertices[t.getV3()];
+            // Ray in the middle of the node pointing in the X direction
+            bool intersects = Geo::rayIntersectsTriangle(glm::vec3(space.minPoint.x - 0.5f, coords.x + node_size/2.f, coords.y + node_size/2.f), glm::vec3(1,0,0), v1, v2, v3, intersection_point);
+            // Keep all the intersections of this row
+            if (intersects) {          
+              intersect_xs.push_back(intersection_point.x);
+            }
+          }
+          // Number of intersection so far
+          uint x_idx = 0;
+          for (uint x = 0; x < size_; x++) {
+            if (voxels[x].color == VoxelColor::GRAY) continue;
+            double x_coord = space.minPoint.x + x * node_size;
+            while ( x_idx < intersect_xs.size() && x_coord > intersect_xs[x_idx]) x_idx++;
+
+            // If number of intersections so far is odd, we are inside the model
+            if (x_idx % 2 == 1) voxels[x].color = VoxelColor::BLACK;
+          }
+          #pragma omp critical
+          {
+            std::cout << "Row Coloring: ";
+            for (Voxel v : voxels) {
+              if (v.color == VoxelColor::BLACK) std::cout << "B";
+              if (v.color == VoxelColor::WHITE) std::cout << "W";
+              if (v.color == VoxelColor::GRAY) std::cout << "G";
+            }
+            std::cout << endl;
+          }
         }
       }
-      // if (quad_node->members.size() != 0) {
-      //   for (BinTreeNode* n : nods) {
-      //     delete n;
-      //   }
-      //   nods.clear();
-      // }
-      // for (Triangle t : triangles) {
-      //   // Triangle t = triangles[tri_idx];
-      //   glm::vec3 intersection_point;
-      //   glm::vec3 v1 = vertices[t.getV1()];
-      //   glm::vec3 v2 = vertices[t.getV2()];
-      //   glm::vec3 v3 = vertices[t.getV3()];
-
-      //   // Ray in the middle of the node pointing upward
-      //   bool intersects = Geo::rayIntersectsTriangle(glm::vec3(coords.x + node_size/2.f, coords.y + node_size/2.f, space.minPoint.z - 0.5f), glm::vec3(0,0,1), v1, v2, v3, intersection_point);
-
-      //   if (intersects) {          
-      //     // std::cout<<"int"<<std::endl;
-      //     intersect_zs.push_back(intersection_point.z);
-      //   }
-      // }
-      // std::sort(intersect_zs.begin(), intersect_zs.end());
-      // if (intersect_zs.size() != 0) {
-      //   unsigned int z_idx = 0;
-      //   std::set<Voxel*>::iterator it;
-      //   for (it = elements[std::make_pair(x,y)].begin(); it != elements[std::make_pair(x,y)].end(); ++it) {
-      //     Voxel* v = *it;
-      //     while (!(z_idx > intersect_zs.size()) && !(v->z <= intersect_zs[z_idx])) {
-      //       z_idx++;
-      //     }
-      //     if (z_idx != 0) { 
-      //       bool intersects_node = false;
-      //       for (Triangle t : triangles) {
-      //         // Triangle t = triangles[tri_idx];
-      //         intersects_node = Geo::testBoxTriangle(mesh, t, glm::vec3(coords,v->z), glm::vec3(coords.x+node_size, coords.y+node_size, v->z+node_size));
-      //         if (intersects_node) {
-      //           glm::vec3 v1 = vertices[t.getV1()];
-      //           glm::vec3 v2 = vertices[t.getV2()];
-      //           glm::vec3 v3 = vertices[t.getV3()];
-
-      //           v->normal = glm::normalize(glm::cross(v3-v2, v3-v1));
-      //           break;
-      //         }
-      //       }
-      //       if (intersects_node){
-      //         v->color = VoxelColor::GRAY;
-      //       } else if (z_idx % 2 == 1) {
-      //         v->color = VoxelColor::BLACK;
-      //       }
-          // }
-        // }
-      // }
     }
   }
 
