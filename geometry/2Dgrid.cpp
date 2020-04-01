@@ -35,7 +35,11 @@ TwoDGrid::TwoDGrid(TriangleMesh* m_, int size, Geo::BBox space_) {
 
 TwoDGrid::~TwoDGrid() {
   for (int i = 0; i < num_nodes*num_nodes; i++) {
-    delete[] grid[i];
+    for (BinTreeNode* btn : grid[i]->bin_tree) {
+      delete btn;
+    }
+    grid[i]->bin_tree.clear();
+    delete grid[i];
   }
   delete[] grid;
 }

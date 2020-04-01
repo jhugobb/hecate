@@ -190,14 +190,14 @@ void Scene::render_gui()
 		// VOXELIZATION
 		clock_gettime(CLOCK_REALTIME, &begin_vox);
 		
-		grid.colorGrid(mesh, twodgrid, useNaive);
+		grid.colorGrid(mesh, twodgrid, useNaive, "test.ply");
 
 		clock_gettime(CLOCK_REALTIME, &end_vox);
 
 		std::cout << "Finished Voxelization in " << end_vox.tv_sec - begin_vox.tv_sec << " s." << std::endl;
-		std::cout << "Writing PLY" << std::endl;
-		grid.writePLY("test.ply");
-
+		// grid.writePLY("test.ply");
+		delete twodgrid;
+		
 		clock_gettime(CLOCK_REALTIME, &end);
 		
 		std::cout << "Finished execution in " << end.tv_sec - begin.tv_sec << " s." << std::endl;

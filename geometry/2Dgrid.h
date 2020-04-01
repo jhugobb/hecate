@@ -17,7 +17,9 @@ typedef std::pair<unsigned int, unsigned int> p_yz;
 class BinTreeNode {
   public:
     BinTreeNode() {};
-    ~BinTreeNode() {}; 
+    ~BinTreeNode() {
+      triangles.clear();
+    }; 
     glm::vec3 min_point;
     glm::vec3 max_point;
     std::multiset<Triangle> triangles;

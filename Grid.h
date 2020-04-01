@@ -35,8 +35,9 @@ class Grid {
      * @param mesh Triangle Mesh of the model to be voxelized
      * @param qt 2Dgrid of the model that subdivided the space
      * @param useNaive boolean that dictates if the naive approach should be used
+     * @param filename name of the file where to save the voxelization
      */ 
-    void colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive);
+    void colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, std::string filename);
 
     /**
      * Creates a PLY model with the voxelization
