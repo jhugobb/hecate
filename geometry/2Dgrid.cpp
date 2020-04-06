@@ -131,7 +131,7 @@ void node::build_bin_tree(TriangleMesh* mesh, Geo::BBox space, double min_node_s
 
   BinTreeNode* btn = new BinTreeNode();
   btn->min_point = glm::vec3(space.minPoint.x, min_point.x, min_point.y);
-  btn->max_point = glm::vec3(space.maxPoint.x, max_point.x, max_point.y);
+  btn->max_point = glm::vec3(space.maxPoint.x+min_node_size, max_point.x, max_point.y);
 
   for (int t : members) {
     btn->triangles.insert(triangles[t]);
@@ -155,7 +155,7 @@ void node::build_bin_tree(TriangleMesh* mesh, Geo::BBox space, double min_node_s
       current_it_tri = it_tri++;
       Triangle t = *current_it_tri;
       // If triangle intersects node
-      if (t.min_x <= current->max_point.x && Geo::testBoxTriangle(mesh, t, current->min_point, current->max_point)) {
+      if (t.min_x < current->max_point.x && Geo::testBoxTriangle(mesh, t, current->min_point, current->max_point)) {
         // We need to subdivide only if half the size of the cell is larger than the minimum size
         if (abs(current->max_point.x - current->min_point.x)/2.0 < min_node_size) {
           current->is_gray = true;

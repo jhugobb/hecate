@@ -35,10 +35,69 @@ Grid::Grid(unsigned int size, Geo::BBox space_) {
   // elements = std::vector<Voxel>();
 }
 
-void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, bool calculate_b_w, std::string filename) {
+bool Grid::testVoxelGray_Naive(int &representative, glm::vec3 voxel_min, glm::vec3 voxel_max, std::vector<int> candidates) {
+  // Naive approach: for each triangle in the node, check if intersects the voxel
+  std::vector<Triangle> triangles = mesh_->getTriangles();
+  for (int tri_idx : candidates) {
+    if (Geo::testBoxTriangle(mesh_, triangles[tri_idx], voxel_min, voxel_max)) {
+      representative = tri_idx;
+      return true;
+    }
+  }
+  return false;
+}
+
+void Grid::testVoxelGray_Box(std::vector<Voxel> &voxels, std::vector<int> candidates, glm::vec2 row_coords) {
+  // Box approach: for each triangle in the row, check which voxels it intersects
+  std::vector<Triangle> triangles = mesh_->getTriangles();
+  std::vector<glm::vec3> verts = mesh_->getVertices();
+
+  for (int tri_idx : candidates) {
+
+    Triangle tri = triangles[tri_idx];
+
+    glm::vec3 v1 = verts[tri.getV1()];
+    glm::vec3 v2 = verts[tri.getV2()];
+    glm::vec3 v3 = verts[tri.getV3()];
+
+    Geo::BBox tri_box;
+
+    tri_box.addPoint(v1);
+    tri_box.addPoint(v2);
+    tri_box.addPoint(v3);
+
+    // Save Bbox of triangle
+    glm::vec3 min_box_tri = tri_box.minPoint;
+    glm::vec3 max_box_tri = tri_box.maxPoint;
+
+    // translate to origin
+    min_box_tri -= space.minPoint;
+    max_box_tri -= space.minPoint;
+
+    int initial_x_grid = std::max(min_box_tri.x / node_size - 1, 0.0);
+    int final_x_grid = max_box_tri.x / node_size;
+
+    glm::vec3 min_box, max_box;
+    for (int x = initial_x_grid; x < final_x_grid + 1 && x < size_; x++) {
+      
+      if (voxels[x].color == VoxelColor::GRAY) continue;
+
+      min_box = glm::vec3(voxels[x].x, row_coords.x, row_coords.y);
+      max_box = glm::vec3(voxels[x].x + node_size, row_coords.x + node_size, row_coords.y + node_size);
+
+      if (Geo::testBoxTriangle(mesh_, triangles[tri_idx], min_box, max_box)) {
+        voxels[x].color = VoxelColor::GRAY;
+        voxels[x].normal = glm::normalize(glm::cross(v3-v2, v3-v1));
+      }
+    }
+  }
+}
+
+
+void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, bool useBox, bool calculate_b_w, std::string filename) {
   std::vector<Triangle> triangles = mesh->getTriangles();
   std::vector<glm::vec3> vertices = mesh->getVertices();
-
+  mesh_ = mesh;
   std::ofstream out_fobj(filename);
   out_fobj<< "ply\r\n"
           << "format ascii 1.0\r\n";
@@ -74,49 +133,25 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, bool calcu
 
       // If the node has triangles
       if (quad_node->members.size() != 0) {
-        if (!useNaive) {
+        if (!useNaive && !useBox) {
           nods = quad_node->bin_tree;
           list_it = nods.begin();
         }
-        for (uint x = 0; x < size_; x++) {
-          Voxel v;
-          // coordinate in world space
-          double x_coord = space.minPoint.x + x * node_size;
-
-          bool intersects_node = false;
-          int representative = -1;
-          if (useNaive) {
-            // Naive approach: for each triangle in the node, check if intersects the voxel
-            for (int tri_idx : quad_node->members) {
-              if (Geo::testBoxTriangle(mesh, triangles[tri_idx], glm::vec3(x_coord, coords.x, coords.y), glm::vec3(x_coord + node_size, coords.x + node_size, coords.y + node_size))) {
-                intersects_node = true;
-                representative = tri_idx;
-                break;
-              }
-            }
-          } else {
-            // Non naive approach: Follow the bin tree until finding the node that represents this voxel
-            while ((*list_it)->max_point.x <= x_coord){
-              ++list_it;
-            }
-            intersects_node = (*list_it)->is_gray;
-            representative = (*list_it)->representative;
+        if (useBox) {
+          for (uint x = 0; x < size_; x++) {
+            Voxel v = Voxel();
+            v.x = space.minPoint.x + x * node_size;
+            voxels.push_back(v);
           }
-          if (intersects_node){
-            v.color = VoxelColor::GRAY;
-            glm::vec3 normal;
-            Triangle t = triangles[representative];
-            glm::vec3 v1 = vertices[t.getV1()];
-            glm::vec3 v2 = vertices[t.getV2()];
-            glm::vec3 v3 = vertices[t.getV3()];
-
-            normal = glm::normalize(glm::cross(v3-v2, v3-v1));
-
+          testVoxelGray_Box(voxels, quad_node->members, coords);
+          for (uint x = 0; x < size_; x++) {
+            if (voxels[x].color != VoxelColor::GRAY) continue;
             glm::vec3 n;
+            double x_coord = space.minPoint.x + x * node_size;
             unsigned char r, g, b;
-            n.x = static_cast<uint8_t>((normal.x * 0.5 + 0.5) * 255);
-            n.y = static_cast<uint8_t>((normal.y * 0.5 + 0.5) * 255);
-            n.z = static_cast<uint8_t>((normal.z * 0.5 + 0.5) * 255);
+            n.x = static_cast<uint8_t>((voxels[x].normal.x * 0.5 + 0.5) * 255);
+            n.y = static_cast<uint8_t>((voxels[x].normal.y * 0.5 + 0.5) * 255);
+            n.z = static_cast<uint8_t>((voxels[x].normal.z * 0.5 + 0.5) * 255);
             r = glm::clamp(2*abs(int(n.x) - 128), 0, 255);
             g = glm::clamp(2*abs(int(n.y) - 128), 0, 255);
             b = glm::clamp(2*abs(int(n.z) - 128), 0, 255);
@@ -133,15 +168,69 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, bool calcu
               num_points++;
             }
           }
-          if (calculate_b_w) {
-            #pragma omp critical
-            {
+        } else {
+          for (uint x = 0; x < size_; x++) {
+            Voxel v;
+            // coordinate in world space
+            double x_coord = space.minPoint.x + x * node_size;
+            bool intersects_node = false;
+            int representative = -1;
+            if (useNaive) {
+              // Naive approach
+              intersects_node = testVoxelGray_Naive(representative, 
+                                                    glm::vec3(x_coord, coords.x, coords.y),
+                                                    glm::vec3(x_coord + node_size, coords.x + node_size, coords.y + node_size),
+                                                    quad_node->members);
+            } else {
+              // 2D Grid Bin tree approach: Follow the bin tree until finding the node that represents this voxel
+              while ((*list_it)->max_point.x <= x_coord+node_size){
+                ++list_it;
+              }
+              intersects_node = (*list_it)->is_gray;
+              representative = (*list_it)->representative;
+            }
+            if (intersects_node){
+              v.color = VoxelColor::GRAY;
+              glm::vec3 normal;
+              Triangle t = triangles[representative];
+              glm::vec3 v1 = vertices[t.getV1()];
+              glm::vec3 v2 = vertices[t.getV2()];
+              glm::vec3 v3 = vertices[t.getV3()];
+
+              normal = glm::normalize(glm::cross(v3-v2, v3-v1));
+
+              glm::vec3 n;
+              unsigned char r, g, b;
+              n.x = static_cast<uint8_t>((normal.x * 0.5 + 0.5) * 255);
+              n.y = static_cast<uint8_t>((normal.y * 0.5 + 0.5) * 255);
+              n.z = static_cast<uint8_t>((normal.z * 0.5 + 0.5) * 255);
+              r = glm::clamp(2*abs(int(n.x) - 128), 0, 255);
+              g = glm::clamp(2*abs(int(n.y) - 128), 0, 255);
+              b = glm::clamp(2*abs(int(n.z) - 128), 0, 255);
+              #pragma omp critical 
+              {
+                out_fobj 
+                        << x_coord << " "
+                        << space.minPoint.y + y*node_size + node_size/2.f << " "
+                        << space.minPoint.z + z*node_size + node_size/2.f << " "
+                        << static_cast<int>(r) << " "
+                        << static_cast<int>(g) << " "
+                        << static_cast<int>(b)
+                        <<'\n';
+                num_points++;
+              }
+            }
+            if (calculate_b_w) {
+              #pragma omp critical
+              {
                 voxels.push_back(v);
+              }
             }
           }
-
         }
+
         if (calculate_b_w) {
+          // Extract this to function
           std::vector<double> intersect_xs;
           for (int tri_idx : quad_node->members) {
             glm::vec3 intersection_point;

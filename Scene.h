@@ -53,9 +53,10 @@ private:
 	
 	// GUI parameters
 	bool bLighting, bWireframe;
-	bool useNaive;
+	bool useNaive, useBox;
 	bool calculate_black_white;
 	int grid_size;
+	int selectedVoxelization;
 	
 	vector<glm::vec3> originalVertices;
 

@@ -149,7 +149,9 @@ void Scene::render_gui()
 	// Voxelization Options
 	ImGui::Text("Voxelization Options");
 	ImGui::Spacing();
-	ImGui::Checkbox("Use Naive?", &useNaive);
+	ImGui::RadioButton("Naive Approach", &selectedVoxelization, 0); ImGui::SameLine();
+	ImGui::RadioButton("Box Approach", &selectedVoxelization, 1); ImGui::SameLine();
+	ImGui::RadioButton("Bin Tree Approach", &selectedVoxelization, 2);
 	ImGui::Spacing();
 	ImGui::Checkbox("Calculate Black and White?", &calculate_black_white);
 	ImGui::Separator();
@@ -168,36 +170,60 @@ void Scene::render_gui()
 	
 	if (ImGui::Button("Voxelize")) {
 
+		timespec begin, end_grid, begin_bt, end_bt, begin_vox, end_vox, end;
+
+		/* =================== 2D Grid =================== */
 		std::cout << "Starting Two D Grid Generation" << std::endl;	
-		timespec begin, end_grid, begin_vox, end_vox, end;
 		clock_gettime(CLOCK_REALTIME, &begin);
-		
+
 		twodgrid = new TwoDGrid(mesh, grid_size, model_bbox);
 		#pragma omp parallel for
 		for (uint i = 0; i < mesh->getTriangles().size(); i++) {
 			twodgrid->insert(i);
 		}
-		if (!useNaive)
-			twodgrid->buildBinTrees();
-		
-		clock_gettime(CLOCK_REALTIME, &end_grid);
-		
-		std::cout << "Finished Two D Grid in " << end_grid.tv_sec - begin.tv_sec << " s." << std::endl;
 
+		clock_gettime(CLOCK_REALTIME, &end_grid);
+		std::cout << "Finished Two D Grid in " << end_grid.tv_sec - begin.tv_sec << " s." << std::endl;
+		/* =================== 2D Grid =================== */
+		
+
+		/* =================== Voxelization =================== */
+		switch (selectedVoxelization) {
+			case 0: 
+				// Naive 
+				useNaive = true;
+				useBox = false;
+				break;
+			case 1: 
+				// Box
+				useNaive = false;
+				useBox = true;
+				break;
+			default:
+				// Bin Tree
+				clock_gettime(CLOCK_REALTIME, &begin_bt);
+				twodgrid->buildBinTrees();
+				clock_gettime(CLOCK_REALTIME, &end_bt);
+				std::cout << "Finished Bin Tree Creation in " << end_bt.tv_sec - begin_bt.tv_sec << " s." << std::endl;
+				useNaive = false;
+				useBox = false;
+				break;
+		}
 		Grid grid(grid_size, model_bbox);
-		cout << "Model bbox min: " << model_bbox.minPoint.x << " " << model_bbox.minPoint.y << " " << model_bbox.minPoint.z << endl; 
-		cout << "Model bbox max: " << model_bbox.maxPoint.x << " " << model_bbox.maxPoint.y << " " << model_bbox.maxPoint.z << endl; 
+
+		// cout << "Model bbox min: " << model_bbox.minPoint.x << " " << model_bbox.minPoint.y << " " << model_bbox.minPoint.z << endl; 
+		// cout << "Model bbox max: " << model_bbox.maxPoint.x << " " << model_bbox.maxPoint.y << " " << model_bbox.maxPoint.z << endl; 
 
 		// VOXELIZATION
 		clock_gettime(CLOCK_REALTIME, &begin_vox);
 		
-		grid.colorGrid(mesh, twodgrid, useNaive, calculate_black_white, "test.ply");
+		grid.colorGrid(mesh, twodgrid, useNaive, useBox, calculate_black_white, "test.ply");
 
 		clock_gettime(CLOCK_REALTIME, &end_vox);
 
 		std::cout << "Finished Voxelization in " << end_vox.tv_sec - begin_vox.tv_sec << " s." << std::endl;
-		// grid.writePLY("test.ply");
 		delete twodgrid;
+		/* =================== Voxelization =================== */
 
 		clock_gettime(CLOCK_REALTIME, &end);
 		
