@@ -8,14 +8,11 @@
 #include "TriangleMesh.h"
 #include "geometry/2Dgrid.h"
 #include "geometry/Geometry.h"
-
+#include "Grid.h"
 
 // Scene contains all the entities of our application.
 // It is responsible for updating and rendering them.
-
-
-class Scene
-{
+class Scene {
 
 public:
 	Scene();
@@ -53,11 +50,9 @@ private:
 	
 	// GUI parameters
 	bool bLighting, bWireframe;
-	bool useNaive, useBox;
-	bool calculate_black_white;
-	int grid_size;
-	int selectedVoxelization;
 	
+	ColoringConfiguration config;
+
 	vector<glm::vec3> originalVertices;
 
 };

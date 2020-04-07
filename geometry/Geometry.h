@@ -125,6 +125,10 @@ bool testBoxTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::v
 
 bool rayIntersectsTriangle(glm::vec3 rayOrigin, glm::vec3 rayVector, glm::vec3 v1_tri, glm::vec3 v2_tri, glm::vec3 v3_tri, glm::vec3& outIntersectionPoint);
 
+double distPointLine(glm::vec3 point, glm::vec3 lineDir, glm::vec3 pointInLine);
+
+bool isRayInvalid(glm::vec3 rayOrigin, glm::vec3 rayVector, glm::vec3 v1_tri, glm::vec3 v2_tri, glm::vec3 v3_tri, double threshold);
+
 } // Geo
 
 #endif // GEO_H

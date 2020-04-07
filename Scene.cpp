@@ -13,7 +13,6 @@
 #include "imgui/imgui.h"
 
 #include "Scene.h"
-#include "Grid.h"
 
 Scene::Scene()
 {
@@ -40,7 +39,9 @@ void Scene::init()
 	
 	bLighting = true;
 	bWireframe = false;
-	useNaive = false;
+	config.n_rays_per_voxel = 4;
+	config.selectedVoxelization = 1;
+	config.grid_size = 64;
 	// lambda = 1.f;
 	// selectedIterativeFunction = 0;
 	// selectedGlobalFunction = 0;
@@ -149,11 +150,24 @@ void Scene::render_gui()
 	// Voxelization Options
 	ImGui::Text("Voxelization Options");
 	ImGui::Spacing();
-	ImGui::RadioButton("Naive Approach", &selectedVoxelization, 0); ImGui::SameLine();
-	ImGui::RadioButton("Box Approach", &selectedVoxelization, 1); ImGui::SameLine();
-	ImGui::RadioButton("Bin Tree Approach", &selectedVoxelization, 2);
+	ImGui::RadioButton("Naive Approach", &config.selectedVoxelization, 0); ImGui::SameLine();
+	ImGui::RadioButton("Box Approach", &config.selectedVoxelization, 1); ImGui::SameLine();
+	ImGui::RadioButton("Bin Tree Approach", &config.selectedVoxelization, 2);
 	ImGui::Spacing();
-	ImGui::Checkbox("Calculate Black and White?", &calculate_black_white);
+	ImGui::Separator();
+	ImGui::Checkbox("Calculate Black and White?", &config.calculate_black_white);
+	ImGui::Spacing();
+	ImGui::Text("Threshold of Ray Validity: ");
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(110);
+	ImGui::InputDouble("##Threshold of Ray Validity", &config.threshold_raycasting, 0.0, 0.05);
+	config.threshold_raycasting = glm::max(0.0, glm::min(config.threshold_raycasting, 3.0));
+	ImGui::Spacing();
+	ImGui::Text("Number of Rays per Voxel Row: ");
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(110);
+	ImGui::InputInt("##Number of Rays Per Voxel Row", &config.n_rays_per_voxel, 4, 1);
+	config.n_rays_per_voxel = glm::max(0, glm::min(config.n_rays_per_voxel, 64));
 	ImGui::Separator();
 	ImGui::Spacing();
 
@@ -164,8 +178,8 @@ void Scene::render_gui()
 	ImGui::Text("Grid size: ");
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(110);
-	ImGui::InputInt("##Gridsize", &grid_size, 50, 1);
-	grid_size = glm::max(0, glm::min(grid_size, 99999));
+	ImGui::InputInt("##Gridsize", &config.grid_size, 50, 1);
+	config.grid_size = glm::max(0, glm::min(config.grid_size, 99999));
 	ImGui::Spacing();
 	
 	if (ImGui::Button("Voxelize")) {
@@ -176,7 +190,7 @@ void Scene::render_gui()
 		std::cout << "Starting Two D Grid Generation" << std::endl;	
 		clock_gettime(CLOCK_REALTIME, &begin);
 
-		twodgrid = new TwoDGrid(mesh, grid_size, model_bbox);
+		twodgrid = new TwoDGrid(mesh, config.grid_size, model_bbox);
 		#pragma omp parallel for
 		for (uint i = 0; i < mesh->getTriangles().size(); i++) {
 			twodgrid->insert(i);
@@ -188,16 +202,16 @@ void Scene::render_gui()
 		
 
 		/* =================== Voxelization =================== */
-		switch (selectedVoxelization) {
+		switch (config.selectedVoxelization) {
 			case 0: 
 				// Naive 
-				useNaive = true;
-				useBox = false;
+				config.useNaive = true;
+				config.useBox = false;
 				break;
 			case 1: 
 				// Box
-				useNaive = false;
-				useBox = true;
+				config.useNaive = false;
+				config.useBox = true;
 				break;
 			default:
 				// Bin Tree
@@ -205,11 +219,11 @@ void Scene::render_gui()
 				twodgrid->buildBinTrees();
 				clock_gettime(CLOCK_REALTIME, &end_bt);
 				std::cout << "Finished Bin Tree Creation in " << end_bt.tv_sec - begin_bt.tv_sec << " s." << std::endl;
-				useNaive = false;
-				useBox = false;
+				config.useNaive = false;
+				config.useBox = false;
 				break;
 		}
-		Grid grid(grid_size, model_bbox);
+		Grid grid(config.grid_size, model_bbox);
 
 		// cout << "Model bbox min: " << model_bbox.minPoint.x << " " << model_bbox.minPoint.y << " " << model_bbox.minPoint.z << endl; 
 		// cout << "Model bbox max: " << model_bbox.maxPoint.x << " " << model_bbox.maxPoint.y << " " << model_bbox.maxPoint.z << endl; 
@@ -217,7 +231,7 @@ void Scene::render_gui()
 		// VOXELIZATION
 		clock_gettime(CLOCK_REALTIME, &begin_vox);
 		
-		grid.colorGrid(mesh, twodgrid, useNaive, useBox, calculate_black_white, "test.ply");
+		grid.colorGrid(mesh, twodgrid, config, "test.ply");
 
 		clock_gettime(CLOCK_REALTIME, &end_vox);
 

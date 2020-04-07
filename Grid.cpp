@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <cstdio>
+#include <random>
 
 #include "Grid.h"
 #include "geometry/Geometry.h"
@@ -78,7 +79,7 @@ void Grid::testVoxelGray_Box(std::vector<Voxel> &voxels, std::vector<int> candid
     int final_x_grid = max_box_tri.x / node_size;
 
     glm::vec3 min_box, max_box;
-    for (int x = initial_x_grid; x < final_x_grid + 1 && x < size_; x++) {
+    for (int x = initial_x_grid; x < final_x_grid + 1 && x < (int) size_; x++) {
       
       if (voxels[x].color == VoxelColor::GRAY) continue;
 
@@ -94,7 +95,7 @@ void Grid::testVoxelGray_Box(std::vector<Voxel> &voxels, std::vector<int> candid
 }
 
 
-void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, bool useBox, bool calculate_b_w, std::string filename) {
+void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration config, std::string filename) {
   std::vector<Triangle> triangles = mesh->getTriangles();
   std::vector<glm::vec3> vertices = mesh->getVertices();
   mesh_ = mesh;
@@ -113,6 +114,8 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, bool useBo
           << "end_header\r\n";
 
   uint num_points = 0;
+
+  const uint N = config.n_rays_per_voxel;
 
   #pragma omp parallel for
   for (unsigned int y = 0; y < size_; y++) {
@@ -133,11 +136,11 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, bool useBo
 
       // If the node has triangles
       if (quad_node->members.size() != 0) {
-        if (!useNaive && !useBox) {
+        if (!config.useNaive && !config.useBox) {
           nods = quad_node->bin_tree;
           list_it = nods.begin();
         }
-        if (useBox) {
+        if (config.useBox) {
           for (uint x = 0; x < size_; x++) {
             Voxel v = Voxel();
             v.x = space.minPoint.x + x * node_size;
@@ -175,7 +178,7 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, bool useBo
             double x_coord = space.minPoint.x + x * node_size;
             bool intersects_node = false;
             int representative = -1;
-            if (useNaive) {
+            if (config.useNaive) {
               // Naive approach
               intersects_node = testVoxelGray_Naive(representative, 
                                                     glm::vec3(x_coord, coords.x, coords.y),
@@ -220,7 +223,7 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, bool useBo
                 num_points++;
               }
             }
-            if (calculate_b_w) {
+            if (config.calculate_black_white) {
               #pragma omp critical
               {
                 voxels.push_back(v);
@@ -229,33 +232,55 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, bool useBo
           }
         }
 
-        if (calculate_b_w) {
+        if (config.calculate_black_white) {
           // Extract this to function
-          std::vector<double> intersect_xs;
+          // One row of intersections for each ray
+          std::vector<double> intersect_xs[N];
+          glm::vec3 origins[N];
+          // random double engine
+          double lower_bound = 0+0.00001;
+          double upper_bound = node_size-0.0000001;
+          std::uniform_real_distribution<double> unif(lower_bound,upper_bound);
+          std::default_random_engine re;
+
+          for (uint i = 0; i < N; i++) {
+            origins[i] = glm::vec3(space.minPoint.x - 0.5f, coords.x + unif(re), coords.y + unif(re));
+          }
+
           for (int tri_idx : quad_node->members) {
-            glm::vec3 intersection_point;
             glm::vec3 v1, v2, v3;
             Triangle t = triangles[tri_idx];
             v1 = vertices[t.getV1()];
             v2 = vertices[t.getV2()];
             v3 = vertices[t.getV3()];
-            // Ray in the middle of the node pointing in the X direction
-            bool intersects = Geo::rayIntersectsTriangle(glm::vec3(space.minPoint.x - 0.5f, coords.x + node_size/2.f, coords.y + node_size/2.f), glm::vec3(1,0,0), v1, v2, v3, intersection_point);
-            // Keep all the intersections of this row
-            if (intersects) {          
-              intersect_xs.push_back(intersection_point.x);
+            glm::vec3 rayDirection = glm::vec3(1,0,0);
+
+            // Keep changing rays until all are valid
+            bool intersects[N] = {false,false,false,false};
+            glm::vec3 intersection_point[N];
+            for (uint i = 0; i < N; i++) {
+              while (Geo::isRayInvalid(origins[i], rayDirection, v1, v2, v3, config.threshold_raycasting)) {
+                origins[i] = glm::vec3(space.minPoint.x - node_size, coords.x + unif(re), coords.y + unif(re));
+              }
+              intersects[i] = Geo::rayIntersectsTriangle(origins[i], rayDirection, v1, v2, v3, intersection_point[i]);
+              if (intersects[i]) intersect_xs[i].push_back(intersection_point[i].x);
             }
           }
-          // Number of intersection so far
-          uint x_idx = 0;
-          for (uint x = 0; x < size_; x++) {
-            if (voxels[x].color == VoxelColor::GRAY) continue;
-            double x_coord = space.minPoint.x + x * node_size;
-            while ( x_idx < intersect_xs.size() && x_coord > intersect_xs[x_idx]) x_idx++;
 
-            // If number of intersections so far is odd, we are inside the model
-            if (x_idx % 2 == 1) voxels[x].color = VoxelColor::BLACK;
+          for (uint i = 0; i < N; i++) {
+            // sort them in ascending X order
+            std::sort(intersect_xs[i].begin(), intersect_xs[i].end());
+            // Number of intersection so far
+            uint x_idx = 0;
+            for (uint x = 0; x < size_; x++) {
+              if (voxels[x].color == VoxelColor::GRAY) continue;
+              double x_coord = space.minPoint.x + x * node_size;
+              while (x_idx < intersect_xs[i].size() && x_coord > intersect_xs[i][x_idx]) x_idx++;
+              // If number of intersections so far is odd , we are inside the model
+              if (x_idx % 2 == 1) voxels[x].color = VoxelColor::BLACK;
+            }
           }
+          
           #pragma omp critical
           {
             std::cout << "Row Coloring: ";

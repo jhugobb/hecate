@@ -6,6 +6,15 @@
 #include "geometry/Geometry.h"
 #include "geometry/2Dgrid.h"
 
+struct ColoringConfiguration {
+	bool useNaive, useBox;
+	bool calculate_black_white;
+	int grid_size;
+	int selectedVoxelization;
+	double threshold_raycasting;
+	int n_rays_per_voxel;
+};
+
 class Grid {
 
   enum VoxelColor {
@@ -35,10 +44,12 @@ class Grid {
      * @param mesh Triangle Mesh of the model to be voxelized
      * @param qt 2Dgrid of the model that subdivided the space
      * @param useNaive boolean that dictates if the naive approach should be used
+     * @param useBox
      * @param calculate_b_w boolean that dictates if black and white coloring should be calculated
+     * @param threshold_raycasting
      * @param filename name of the file where to save the voxelization
      */ 
-    void colorGrid(TriangleMesh* mesh, TwoDGrid* qt, bool useNaive, bool useBox, bool calculate_b_w, std::string filename);
+    void colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration config, std::string filename);
 
 
     /**

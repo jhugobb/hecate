@@ -248,6 +248,25 @@ bool rayIntersectsTriangle(glm::vec3 rayOrigin, glm::vec3 rayVector, glm::vec3 v
     return false;
 }
 
+double distPointLine(glm::vec3 point, glm::vec3 lineDir, glm::vec3 pointInLine) {
+  return glm::length(glm::cross(pointInLine-point, lineDir)) / glm::length(lineDir);
+}
+
+bool isRayInvalid(glm::vec3 rayOrigin, glm::vec3 rayVector, glm::vec3 v1_tri, glm::vec3 v2_tri, glm::vec3 v3_tri, double threshold) {
+  glm::vec3 normal = glm::normalize(glm::cross(v3_tri - v2_tri, v3_tri - v1_tri));
+
+  if (abs(glm::dot(normal, rayVector)) <= 0.0001 ) {
+    // Ray is invalid if it's too close
+    // It's too close to the triangle if it's too close to one of its points or one of its edges
+    if (distPointLine(v1_tri, rayVector, rayOrigin) < threshold) return true;
+    if (distPointLine(v2_tri, rayVector, rayOrigin) < threshold) return true;
+    if (distPointLine(v3_tri, rayVector, rayOrigin) < threshold) return true;
+    // TODO distance from ray to each edge
+  }
+
+  return false; 
+}
+
 
 
 } //GEO
