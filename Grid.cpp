@@ -259,10 +259,12 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration con
             bool intersects[N] = {false,false,false,false};
             glm::vec3 intersection_point[N];
             for (uint i = 0; i < N; i++) {
-              while (Geo::isRayInvalid(origins[i], rayDirection, v1, v2, v3, config.threshold_raycasting)) {
+              Geo::IntersectionResult res = Geo::rayIntersectsTriangle(origins[i], rayDirection, v1, v2, v3, config.threshold_raycasting, intersection_point[i]);
+              while (res == Geo::IntersectionResult::INVALID) {
                 origins[i] = glm::vec3(space.minPoint.x - node_size, coords.x + unif(re), coords.y + unif(re));
+                res = Geo::rayIntersectsTriangle(origins[i], rayDirection, v1, v2, v3, config.threshold_raycasting, intersection_point[i]);
               }
-              intersects[i] = Geo::rayIntersectsTriangle(origins[i], rayDirection, v1, v2, v3, intersection_point[i]);
+              intersects[i] = res == Geo::IntersectionResult::INTERSECTS;
               if (intersects[i]) intersect_xs[i].push_back(intersection_point[i].x);
             }
           }
@@ -277,7 +279,9 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration con
               double x_coord = space.minPoint.x + x * node_size;
               while (x_idx < intersect_xs[i].size() && x_coord > intersect_xs[i][x_idx]) x_idx++;
               // If number of intersections so far is odd , we are inside the model
-              if (x_idx % 2 == 1) voxels[x].color = VoxelColor::BLACK;
+              if (x_idx % 2 == 1){
+                 voxels[x].color = VoxelColor::BLACK;
+              }
             }
           }
           

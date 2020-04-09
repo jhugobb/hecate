@@ -220,32 +220,74 @@ bool testBoxTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::v
   return true;
 }
 
-bool rayIntersectsTriangle(glm::vec3 rayOrigin, glm::vec3 rayVector, glm::vec3 v1_tri, glm::vec3 v2_tri, glm::vec3 v3_tri, glm::vec3& outIntersectionPoint) {
-  glm::vec3 edge1, edge2, h, s, q;
-  float a,f,u,v;
+IntersectionResult rayIntersectsTriangle(glm::vec3 rayOrigin, glm::vec3 rayVector, glm::vec3 v1_tri, glm::vec3 v2_tri, glm::vec3 v3_tri, double threshold, glm::vec3& outIntersectionPoint) {
+  glm::vec3 edge1, edge2;
+  float f,u,v,a;
+  glm::vec3 q,h,s;
   edge1 = v2_tri - v1_tri;
   edge2 = v3_tri - v1_tri;
+
+  glm::vec3 n = glm::cross(edge2, edge1);
+
+  // Check if ray and triangle are parallel
+  float nDotRay = glm::dot(n, rayVector);
+  if (abs(nDotRay) < threshold) {
+    // They are parallel, but are they invalid?
+    glm::vec3 barycenter = (v1_tri + v2_tri + v3_tri) / 3.0f;
+    if (distPointLine(barycenter, rayVector, rayOrigin) < threshold) {
+      // Ray is invalid
+      return IntersectionResult::INVALID;
+    } else {
+      // It's not invalid, just doesn't intersect
+      return IntersectionResult::NOT_INTERSECTS;
+    }
+  }
+
   h = glm::cross(rayVector, edge2);
   a = glm::dot(edge1, h);
-  if (a > -Geo::EPSILON && a < Geo::EPSILON)
-    return false;    // This ray is parallel to this triangle.
+
   f = 1.0/a;
   s = rayOrigin - v1_tri;
   u = f * glm::dot(s, h);
-  if (u < 0.0 || u > 1.0)
-    return false;
+  // barycentric coordinate U
+  if (u < 0.0 || u > 1.0) {
+    // The point is outside the triangle
+    return IntersectionResult::NOT_INTERSECTS;
+  }
+
   q = glm::cross(s, edge1);
   v = f * glm::dot(rayVector, q);
-  if (v < 0.0 || u + v > 1.0)
-      return false;
+  // barycentric coordinate V
+  if (v < 0.0 || u + v > 1.0){
+    // The point is outside the triangle
+    return IntersectionResult::NOT_INTERSECTS;
+
+  }
+
   // At this stage we can compute t to find out where the intersection point is on the line.
   float t = f * glm::dot(edge2, q);
-  if (t > EPSILON) { // ray intersection
+  if (t > threshold) { // ray intersection
     outIntersectionPoint = rayOrigin + rayVector * t;
-    return true;
+    // Now we check if the intersection is too close to an edge or vertex of the triangle
+    float w = 1.0f - u - v;
+    if ((u < threshold && v < threshold && w >= threshold) ||
+        (v < threshold && w < threshold && u >= threshold) ||
+        (w < threshold && u < threshold && v >= threshold)) {
+      // Too close to a vertex
+      return IntersectionResult::INVALID;
+    }
+
+    if ((u < threshold && v >= threshold && w >= threshold) ||
+        (v < threshold && w >= threshold && u >= threshold) ||
+        (w < threshold && u >= threshold && v >= threshold)) {
+      // Too close to an edge
+      return IntersectionResult::INVALID;
+    }
+
+    return IntersectionResult::INTERSECTS;
   }
   else // This means that there is a line intersection but not a ray intersection. 
-    return false;
+    return IntersectionResult::NOT_INTERSECTS;
 }
 
 double distPointLine(glm::vec3 point, glm::vec3 lineDir, glm::vec3 pointInLine) {
