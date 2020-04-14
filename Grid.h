@@ -12,7 +12,8 @@ struct ColoringConfiguration {
 	int grid_size;
 	int selectedVoxelization;
 	double threshold_raycasting;
-	int n_rays_per_voxel;
+  bool writePNG;
+  bool writePLY;
 };
 
 class Grid {
@@ -77,7 +78,13 @@ class Grid {
 
     bool testVoxelGray_Naive(int &representative, glm::vec3 voxel_min, glm::vec3 voxel_max, std::vector<int> candidates);
     
-    void testVoxelGray_Box(std::vector<Voxel> &voxels, std::vector<int> candidates, glm::vec2 row_coords);
+    void testVoxelGray_Box(int z, Voxel* voxels, std::vector<int> &candidates, glm::vec2 &row_coords);
 
-};
+    void writePLY(int x, int y, int z, Voxel& voxel, std::ofstream &out_fobj) const;
+
+    void calculateBlackWhite(int z, glm::vec2 coords, node* quad_node, Voxel* voxels, double threshold);
+
+    void saveSliceAsPNG(Voxel* voxels, uint y);
+
+};  
 #endif

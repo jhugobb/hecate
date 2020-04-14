@@ -41,7 +41,9 @@ file(GLOB hecate_SRC
     "*.h"
     "*.cpp"
     "geometry/*.cpp"
-    "geometry/*h"
+    "geometry/*.h"
+    "lodepng/lodepng.h"
+    "lodepng/lodepng.cpp"
 )
 
 add_executable(${appName} ${imgui_files} ${gl3w_files} ${nanoflann_files} ${hecate_SRC})

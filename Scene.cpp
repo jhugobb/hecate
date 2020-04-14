@@ -39,7 +39,6 @@ void Scene::init()
 	
 	bLighting = true;
 	bWireframe = false;
-	config.n_rays_per_voxel = 4;
 	config.selectedVoxelization = 1;
 	config.grid_size = 64;
 	// lambda = 1.f;
@@ -163,12 +162,13 @@ void Scene::render_gui()
 	ImGui::InputDouble("##Threshold of Ray Validity", &config.threshold_raycasting, 0.0, 0.05);
 	config.threshold_raycasting = glm::max(0.0, glm::min(config.threshold_raycasting, 3.0));
 	ImGui::Spacing();
-	ImGui::Text("Number of Rays per Voxel Row: ");
-	ImGui::SameLine();
-	ImGui::SetNextItemWidth(110);
-	ImGui::InputInt("##Number of Rays Per Voxel Row", &config.n_rays_per_voxel, 4, 1);
-	config.n_rays_per_voxel = glm::max(0, glm::min(config.n_rays_per_voxel, 64));
+
+	//Output options
 	ImGui::Separator();
+	ImGui::Text("Voxelization Options");
+	ImGui::Checkbox("Write slices as PNGs?", &config.writePNG);
+	ImGui::Spacing();
+	ImGui::Checkbox("Write grays as PLY?", &config.writePLY);
 	ImGui::Spacing();
 
 	// Grid parameters
@@ -183,6 +183,8 @@ void Scene::render_gui()
 	ImGui::Spacing();
 	
 	if (ImGui::Button("Voxelize")) {
+
+		std::cout << "=================== Voxelization ===================" << std::endl;	
 
 		timespec begin, end_grid, begin_bt, end_bt, begin_vox, end_vox, end;
 
