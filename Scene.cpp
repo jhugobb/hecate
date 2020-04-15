@@ -41,6 +41,8 @@ void Scene::init()
 	bWireframe = false;
 	config.selectedVoxelization = 1;
 	config.grid_size = 64;
+	config.writePLY = true;
+	config.writePNG = true;
 	// lambda = 1.f;
 	// selectedIterativeFunction = 0;
 	// selectedGlobalFunction = 0;
@@ -169,6 +171,8 @@ void Scene::render_gui()
 	ImGui::Checkbox("Write slices as PNGs?", &config.writePNG);
 	ImGui::Spacing();
 	ImGui::Checkbox("Write grays as PLY?", &config.writePLY);
+	ImGui::Spacing();
+	ImGui::Checkbox("Write Hecate File?", &config.writeHEC);
 	ImGui::Spacing();
 
 	// Grid parameters

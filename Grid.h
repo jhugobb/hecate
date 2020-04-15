@@ -14,6 +14,7 @@ struct ColoringConfiguration {
 	double threshold_raycasting;
   bool writePNG;
   bool writePLY;
+  bool writeHEC;
 };
 
 class Grid {
@@ -82,9 +83,15 @@ class Grid {
 
     void writePLY(int x, int y, int z, Voxel& voxel, std::ofstream &out_fobj) const;
 
-    void calculateBlackWhite(int z, glm::vec2 coords, node* quad_node, Voxel* voxels, double threshold);
+    void calculateBlackWhite(int z, 
+                             glm::vec2 coords, 
+                             node* quad_node, 
+                             Voxel* voxels, 
+                             double threshold);
 
     void saveSliceAsPNG(Voxel* voxels, uint y);
+
+    void saveSliceAsHEC(Voxel* voxels, std::ofstream &bin_file);
 
 };  
 #endif

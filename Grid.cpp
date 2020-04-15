@@ -6,6 +6,7 @@
 #include <fstream>
 #include <cstdio>
 #include <random>
+#include <bitset>
 
 #include "Grid.h"
 #include "geometry/Geometry.h"
@@ -51,10 +52,13 @@ bool Grid::testVoxelGray_Naive(int &representative, glm::vec3 voxel_min, glm::ve
   return false;
 }
 
-void Grid::testVoxelGray_Box(int z, Voxel* voxels, std::vector<int> &candidates, glm::vec2 &row_coords) {
-  // Box approach: for each triangle in the row, check which voxels it intersects
+void Grid::testVoxelGray_Box(int z, 
+                             Voxel* voxels, 
+                             std::vector<int> &candidates, 
+                             glm::vec2 &row_coords) {
   std::vector<Triangle> triangles = mesh_->getTriangles();
   std::vector<glm::vec3> verts = mesh_->getVertices();
+  // Box approach: for each triangle in the row, check which voxels it intersects
   for (int tri_idx : candidates) {
 
     Triangle tri = triangles[tri_idx];
@@ -117,8 +121,11 @@ void Grid::writePLY(int x, int y, int z, Voxel &voxel, std::ofstream &out_fobj) 
           <<'\n';
 }
 
-void Grid::calculateBlackWhite(int z, glm::vec2 coords, node* quad_node, Voxel* voxels, double threshold) {
-
+void Grid::calculateBlackWhite(int z, 
+                               glm::vec2 coords, 
+                               node* quad_node, 
+                               Voxel* voxels, 
+                               double threshold) {
   std::vector<Triangle> triangles = mesh_->getTriangles();
   std::vector<glm::vec3> vertices = mesh_->getVertices();
   // One row of intersections for each ray
@@ -165,27 +172,20 @@ void Grid::calculateBlackWhite(int z, glm::vec2 coords, node* quad_node, Voxel* 
         voxels[z * size_ + x].color = VoxelColor::BLACK;
     }
   }
-  
-  // #pragma omp critical
-  // {
-  //   std::cout << "Row Coloring: ";
-  //   for (uint i = 0; i < size_; i++) {
-  //     Voxel v = voxels[z * size_ + i];
-  //     if (v.color == VoxelColor::BLACK) std::cout << "B";
-  //     if (v.color == VoxelColor::WHITE) std::cout << "W";
-  //     if (v.color == VoxelColor::GRAY) std::cout << "G";
-  //   }
-  //   std::cout << endl;
-  // }
 }
 
 void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration config, std::string filename) {
   std::vector<Triangle> triangles = mesh->getTriangles();
   std::vector<glm::vec3> vertices = mesh->getVertices();
   mesh_ = mesh;
+
+  // For PLY writing
   std::ofstream out_fobj(filename);
   std::streampos file_verts_line;
   uint num_points = 0;
+
+  // For Binary file writing
+  std::ofstream bin_file("test.hec", std::ios::binary | std::ios::out);
 
   if (config.writePLY) {
     out_fobj<< "ply\r\n"
@@ -203,167 +203,120 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration con
             << "end_header\r\n";
   }
 
-  #pragma omp parallel for
   for (unsigned int y = 0; y < size_; y++) {
     Voxel voxels[size_*size_];
-    // #pragma omp parallel private(voxels)
-    // {
-      #pragma omp paralel for private(voxels)
-      for (unsigned int z = 0; z < size_; z++) {
-        glm::vec2 coords;
+    #pragma omp parallel for
+    for (unsigned int z = 0; z < size_; z++) {
+      glm::vec2 coords;
 
-        // Coords of voxel in the 2D grid dimensions
-        coords.x = space.minPoint.y + y * node_size;
-        coords.y = space.minPoint.z + z * node_size;
+      // Coords of voxel in the 2D grid dimensions
+      coords.x = space.minPoint.y + y * node_size;
+      coords.y = space.minPoint.z + z * node_size;
 
-        // 2Dgrid node that has the triangles for this y z 
-        node* quad_node = qt->query(glm::vec2(y,z));
-        
-        std::list<BinTreeNode*>::iterator list_it;
-        std::list<BinTreeNode*> nods;
+      // 2Dgrid node that has the triangles for this y z 
+      node* quad_node = qt->query(glm::vec2(y,z));
+      
+      std::list<BinTreeNode*>::iterator list_it;
+      std::list<BinTreeNode*> nods;
 
-        // If the node has triangles
-        if (quad_node->members.size() != 0) {
-          if (!config.useNaive && !config.useBox) {
-            nods = quad_node->bin_tree;
-            list_it = nods.begin();
+      // If the node has triangles
+      if (quad_node->members.size() != 0) {
+        if (!config.useNaive && !config.useBox) {
+          nods = quad_node->bin_tree;
+          list_it = nods.begin();
+        }
+        if (config.useBox) {
+          for (uint x = 0; x < size_; x++) {
+            Voxel v = Voxel();
+            v.x = space.minPoint.x + x * node_size;
+            voxels[z*size_ + x] = v;
           }
-          if (config.useBox) {
-            for (uint x = 0; x < size_; x++) {
-              Voxel v = Voxel();
-              v.x = space.minPoint.x + x * node_size;
-              voxels[z*size_ + x] = v;
+          testVoxelGray_Box(z, voxels, quad_node->members, coords);
+          for (uint x = 0; x < size_; x++) {
+            if (voxels[z*size_ + x].color != VoxelColor::GRAY) continue;
+            if (config.writePLY) {
+              #pragma omp critical 
+              {
+                writePLY(x, y, z, voxels[z*size_ + x], out_fobj);
+                num_points++;
+              }
             }
-            testVoxelGray_Box(z, voxels, quad_node->members, coords);
-            for (uint x = 0; x < size_; x++) {
-              if (voxels[z*size_ + x].color != VoxelColor::GRAY) continue;
+          }
+        } else {
+          for (uint x = 0; x < size_; x++) {
+            Voxel v;
+            // coordinate in world space
+            double x_coord = space.minPoint.x + x * node_size;
+            bool intersects_node = false;
+            int representative = -1;
+            if (config.useNaive) {
+              // Naive approach
+              intersects_node = testVoxelGray_Naive(representative, 
+                                                    glm::vec3(x_coord, coords.x, coords.y),
+                                                    glm::vec3(x_coord + node_size, coords.x + node_size, coords.y + node_size),
+                                                    quad_node->members);
+            } else {
+              // 2D Grid Bin tree approach: Follow the bin tree until finding the node that represents this voxel
+              while ((*list_it)->max_point.x <= x_coord+node_size){
+                ++list_it;
+              }
+              intersects_node = (*list_it)->is_gray;
+              representative = (*list_it)->representative;
+            }
+            if (intersects_node){
+              v.color = VoxelColor::GRAY;
               if (config.writePLY) {
+                glm::vec3 normal;
+                Triangle t = triangles[representative];
+                glm::vec3 v1 = vertices[t.getV1()];
+                glm::vec3 v2 = vertices[t.getV2()];
+                glm::vec3 v3 = vertices[t.getV3()];
+
+                normal = glm::normalize(glm::cross(v3-v2, v3-v1));
+                v.normal = normal;
                 #pragma omp critical 
                 {
-                  writePLY(x, y, z, voxels[z*size_ + x], out_fobj);
+                  writePLY(x, y, z, v, out_fobj);
                   num_points++;
                 }
               }
             }
-          } else {
-            for (uint x = 0; x < size_; x++) {
-              Voxel v;
-              // coordinate in world space
-              double x_coord = space.minPoint.x + x * node_size;
-              bool intersects_node = false;
-              int representative = -1;
-              if (config.useNaive) {
-                // Naive approach
-                intersects_node = testVoxelGray_Naive(representative, 
-                                                      glm::vec3(x_coord, coords.x, coords.y),
-                                                      glm::vec3(x_coord + node_size, coords.x + node_size, coords.y + node_size),
-                                                      quad_node->members);
-              } else {
-                // 2D Grid Bin tree approach: Follow the bin tree until finding the node that represents this voxel
-                while ((*list_it)->max_point.x <= x_coord+node_size){
-                  ++list_it;
-                }
-                intersects_node = (*list_it)->is_gray;
-                representative = (*list_it)->representative;
-              }
-              if (intersects_node){
-                v.color = VoxelColor::GRAY;
-                if (config.writePLY) {
-                  glm::vec3 normal;
-                  Triangle t = triangles[representative];
-                  glm::vec3 v1 = vertices[t.getV1()];
-                  glm::vec3 v2 = vertices[t.getV2()];
-                  glm::vec3 v3 = vertices[t.getV3()];
 
-                  normal = glm::normalize(glm::cross(v3-v2, v3-v1));
-                  v.normal = normal;
-                  writePLY(x, y, z, v, out_fobj);
-                }
-              }
-
-              if (config.calculate_black_white) {
-                #pragma omp critical
-                {
-                  voxels[z*size_ + x] = v;
-                }
-              }
+            if (config.calculate_black_white) {
+              voxels[z*size_ + x] = v;
             }
           }
-
-          if (config.calculate_black_white) {
-            calculateBlackWhite(z, coords, quad_node, voxels, config.threshold_raycasting);
-          }
         }
-      }
-      if (config.writePNG) {
-        #pragma omp critical 
-        {
-          saveSliceAsPNG(voxels, y);
+
+        if (config.calculate_black_white) {
+          calculateBlackWhite(z, coords, quad_node, voxels, config.threshold_raycasting);
         }
       }
     }
-  // }
+    if (config.writePNG) {
+      #pragma omp critical 
+      {
+        saveSliceAsPNG(voxels, y);
+      }
+    }
+
+    if (config.writeHEC) {
+      #pragma omp critical
+      {
+        // Write Hecate (binary file)
+        saveSliceAsHEC(voxels, bin_file);
+      }
+    }
+  }
 
   if (config.writePLY) {
     out_fobj.seekp(file_verts_line, std::ios::beg);
     out_fobj << string_format("element vertex %20d\r\n", num_points);
-    out_fobj.close();
   }
+  out_fobj.close();
+  bin_file.close();
+
 }
-
-// void Grid::writePLY(std::string filename) {
-//   std::ofstream out_fobj(filename);
-
-//   out_fobj<< "ply\r\n"
-//           << "format ascii 1.0\r\n";
-//   auto file_verts_line = out_fobj.tellp();
-
-//   out_fobj<< string_format("element vertex %20d\r\n", 0)
-//           << "property float x\r\n"
-//           << "property float y\r\n"
-//           << "property float z\r\n"
-//           << "property uchar red\r\n"
-//           << "property uchar green\r\n"
-//           << "property uchar blue\r\n"
-//           << "end_header\r\n";
-
-//   uint num_points = 0;
-
-//   unsigned char r, g, b;
-//   r = g = b = 255u;
-  
-//   for (uint y = 0; y < size_; y++) {
-//     for (uint z = 0; z < size_; z++) {
-//       for (uint x = 0; x < size_; x++) {
-//         Voxel* v = elements[y*size_*size_+z*size_+x];
-//         if (v->color == VoxelColor::GRAY) {
-
-//           glm::vec3 n;
-//           n.x = static_cast<uint8_t>((v->normal.x * 0.5 + 0.5) * 255);
-//           n.y = static_cast<uint8_t>((v->normal.y * 0.5 + 0.5) * 255);
-//           n.z = static_cast<uint8_t>((v->normal.z * 0.5 + 0.5) * 255);
-//           r = glm::clamp(2*abs(int(n.x) - 128), 0, 255);
-//           g = glm::clamp(2*abs(int(n.y) - 128), 0, 255);
-//           b = glm::clamp(2*abs(int(n.z) - 128), 0, 255);
-
-//           out_fobj 
-//                   << v->x << " "
-//                   << space.minPoint.y + y*node_size + node_size/2.f << " "
-//                   << space.minPoint.z + z*node_size + node_size/2.f << " "
-//                   << static_cast<int>(r) << " "
-//                   << static_cast<int>(g) << " "
-//                   << static_cast<int>(b)
-//                   <<'\n';
-//           num_points++;
-//         }
-//       }
-//     }
-//   }
-
-//   out_fobj.seekp(file_verts_line, std::ios::beg);
-//   out_fobj << string_format("element vertex %20d\r\n", num_points);
-//   out_fobj.close();
-// }
 
 void Grid::saveSliceAsPNG(Voxel* voxels, uint y) {
 
@@ -405,4 +358,51 @@ void Grid::saveSliceAsPNG(Voxel* voxels, uint y) {
   //if there's an error, display it
   if(error) std::cout << "encoder error " << error << ": "<< lodepng_error_text(error) << std::endl;
   // else lodepng::save_file(buffer, filename);
+}
+
+void Grid::saveSliceAsHEC(Voxel* voxels, std::ofstream &bin_file) {
+
+  char* slice_memblock;
+
+  if (bin_file.is_open()) {
+    slice_memblock = new char[(size_*size_)/4];
+    uint slice_idx = 0;
+    for (uint i = 0; i < size_*size_; i+=4) {
+      std::bitset<8> bits(0);
+
+      if (voxels[i].color == VoxelColor::BLACK) {
+        bits.set(1);
+      } else if (voxels[i].color == VoxelColor::GRAY) {
+        bits.set(0);
+      }
+
+      if (voxels[i+1].color == VoxelColor::BLACK) {
+        bits.set(3);
+      } else if (voxels[i+1].color == VoxelColor::GRAY) {
+        bits.set(2);
+      }
+
+      if (voxels[i+2].color == VoxelColor::BLACK) {
+        bits.set(5);
+      } else if (voxels[i+2].color == VoxelColor::GRAY) {
+        bits.set(4);
+      }
+
+      if (voxels[i+3].color == VoxelColor::BLACK) {
+        bits.set(7);
+      } else if (voxels[i+3].color == VoxelColor::GRAY) {
+        bits.set(6);
+      }
+
+      slice_memblock[slice_idx++] =  static_cast<unsigned char>(bits.to_ulong());
+    }
+
+    bin_file.write(slice_memblock, size_*size_/4);
+
+    delete[] slice_memblock;
+  } else {
+    std::cout << "Unable to open file." << std::endl;
+    assert(false);
+  }
+
 }
