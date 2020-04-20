@@ -79,19 +79,19 @@ class Grid {
 
     bool testVoxelGray_Naive(int &representative, glm::vec3 voxel_min, glm::vec3 voxel_max, std::vector<int> candidates);
     
-    void testVoxelGray_Box(int z, Voxel* voxels, std::vector<int> &candidates, glm::vec2 &row_coords);
+    void testVoxelGray_Box(int z, std::vector<Voxel> &voxels, std::vector<int> &candidates, glm::vec2 &row_coords);
 
     void writePLY(int x, int y, int z, Voxel& voxel, std::ofstream &out_fobj) const;
 
     void calculateBlackWhite(int z, 
                              glm::vec2 coords, 
                              node* quad_node, 
-                             Voxel* voxels, 
+                             std::vector<Voxel> &voxels, 
                              double threshold);
 
-    void saveSliceAsPNG(Voxel* voxels, uint y);
+    void saveSliceAsPNG(std::vector<Voxel> &voxels, uint y);
 
-    void saveSliceAsHEC(Voxel* voxels, std::ofstream &bin_file);
+    void saveSliceAsHEC(std::vector<Voxel> &voxels, std::ofstream &bin_file);
 
 };  
 #endif

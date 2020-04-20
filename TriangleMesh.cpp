@@ -13,7 +13,7 @@ TriangleMesh::TriangleMesh()
 }
 
 
-void TriangleMesh::init(const vector<glm::vec3> &newVertices, const vector<Triangle> &newTriangles)
+void TriangleMesh::init(const vector<glm::vec3> &newVertices, const vector<Triangle*> &newTriangles)
 {
 	copy(newVertices.begin(), newVertices.end(), back_inserter(vertices));
 	copy(newTriangles.begin(), newTriangles.end(), back_inserter(triangles));
@@ -70,7 +70,8 @@ bool TriangleMesh::load(const string &filename)
 			tris.push_back(face[0]);
 			tris.push_back(face[j]);
 			tris.push_back(face[j+1]);
-			Triangle t = Triangle(face[0], face[j], face[j+1]);
+			Triangle* t = new Triangle(face[0], face[j], face[j+1]);
+			t->calculateTriBbox(vertices);
 			triangles.push_back(t);
 		}
 	}
@@ -104,11 +105,11 @@ void TriangleMesh::sendToOpenGL(ShaderProgram &program)
 	
 	for(unsigned int i=0; i<triangles.size(); i++)
 	{
-		glVertices->push_back(vertices[triangles[i].getV1()]);
-		glVertices->push_back(vertices[triangles[i].getV2()]);
-		glVertices->push_back(vertices[triangles[i].getV3()]);
+		glVertices->push_back(vertices[triangles[i]->getV1()]);
+		glVertices->push_back(vertices[triangles[i]->getV2()]);
+		glVertices->push_back(vertices[triangles[i]->getV3()]);
 		
-		normal = glm::cross(vertices[triangles[i].getV2()] - vertices[triangles[i].getV1()], vertices[triangles[i].getV3()] - vertices[triangles[i].getV1()]);
+		normal = glm::cross(vertices[triangles[i]->getV2()] - vertices[triangles[i]->getV1()], vertices[triangles[i]->getV3()] - vertices[triangles[i]->getV1()]);
 		normal = glm::normalize(normal);
 		
 		glNormals->push_back(normal);

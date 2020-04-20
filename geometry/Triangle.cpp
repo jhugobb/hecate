@@ -33,3 +33,9 @@ void Triangle::saveMinX(TriangleMesh* m) {
 
   min_x = std::min(v1_v.x, std::min(v2_v.x, v3_v.x));
 }
+
+void Triangle::calculateTriBbox(std::vector<glm::vec3> &vertices) {
+  tri_bbox.addPoint(vertices[v1]);
+  tri_bbox.addPoint(vertices[v2]);
+  tri_bbox.addPoint(vertices[v3]);
+}

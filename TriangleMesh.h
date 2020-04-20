@@ -13,7 +13,7 @@ class TriangleMesh
 public:
 	TriangleMesh();
 
-	void init(const vector<glm::vec3> &newVertices, const vector<Triangle> &newTriangles);
+	void init(const vector<glm::vec3> &newVertices, const vector<Triangle*> &newTriangles);
 	bool load(const string &filename);
 
 	void getBBox(glm::vec3 box[2]) const;
@@ -25,8 +25,8 @@ public:
 	
 	const vector<glm::vec3> &getVertices() const { return vertices; }
 	vector<glm::vec3> &getVertices() { return vertices; }
-	const vector<Triangle> &getTriangles() const { return triangles; }
-	vector<Triangle> &getTriangles() { return triangles; }
+	const vector<Triangle*> &getTriangles() const { return triangles; }
+	vector<Triangle*> &getTriangles() { return triangles; }
 
 	
 	static int next(int corner);
@@ -39,7 +39,7 @@ private:
 
 private:
 	vector<glm::vec3> vertices;
-	vector<Triangle> triangles;
+	vector<Triangle*> triangles;
 
 	bool bGLObjsInit;
 	GLuint vao;

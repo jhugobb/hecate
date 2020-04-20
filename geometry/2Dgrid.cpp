@@ -45,24 +45,14 @@ TwoDGrid::~TwoDGrid() {
 }
 
 void TwoDGrid::insert(int t) {
-  std::vector<Triangle> tris = m->getTriangles();
+  std::vector<Triangle*> tris = m->getTriangles();
   std::vector<glm::vec3> verts = m->getVertices();
 
-  Triangle tri = tris[t];
-
-  glm::vec3 v1 = verts[tri.getV1()];
-  glm::vec3 v2 = verts[tri.getV2()];
-  glm::vec3 v3 = verts[tri.getV3()];
-
-  Geo::BBox tri_box;
-
-  tri_box.addPoint(v1);
-  tri_box.addPoint(v2);
-  tri_box.addPoint(v3);
+  Triangle* tri = tris[t];
 
   // Save Bbox of triangle
-  glm::vec3 min_box_tri = tri_box.minPoint;
-  glm::vec3 max_box_tri = tri_box.maxPoint;
+  glm::vec3 min_box_tri = tri->tri_bbox.minPoint;
+  glm::vec3 max_box_tri = tri->tri_bbox.maxPoint;
 
   // translate to origin
   min_box_tri -= space.minPoint;
@@ -99,7 +89,7 @@ void TwoDGrid::buildBinTrees() {
 
   #pragma omp parallel
   for (uint i = 0; i < m->getTriangles().size(); i++) {
-    m->getTriangles()[i].saveMinX(m);
+    m->getTriangles()[i]->saveMinX(m);
   }
   #pragma omp parallel for
   for (int y = 0; y < num_nodes; y++) {
@@ -126,7 +116,7 @@ void node::build_bin_tree(TriangleMesh* mesh, Geo::BBox space, double min_node_s
   std::list<BinTreeNode*> result;
   std::list<BinTreeNode*>::iterator it;
 
-  std::vector<Triangle> triangles = mesh->getTriangles();
+  std::vector<Triangle*> triangles = mesh->getTriangles();
   std::map<Triangle, int> reference;
 
   BinTreeNode* btn = new BinTreeNode();
@@ -134,8 +124,8 @@ void node::build_bin_tree(TriangleMesh* mesh, Geo::BBox space, double min_node_s
   btn->max_point = glm::vec3(space.maxPoint.x+min_node_size, max_point.x, max_point.y);
 
   for (int t : members) {
-    btn->triangles.insert(triangles[t]);
-    reference.emplace(triangles[t], t);
+    btn->triangles.insert(*triangles[t]);
+    reference.emplace(*triangles[t], t);
   }
 
   result.push_back(btn);
@@ -155,7 +145,7 @@ void node::build_bin_tree(TriangleMesh* mesh, Geo::BBox space, double min_node_s
       current_it_tri = it_tri++;
       Triangle t = *current_it_tri;
       // If triangle intersects node
-      if (t.min_x < current->max_point.x && Geo::testBoxTriangle(mesh, t, current->min_point, current->max_point)) {
+      if (t.min_x < current->max_point.x && Geo::testBoxTriangle(mesh, &t, current->min_point, current->max_point)) {
         // We need to subdivide only if half the size of the cell is larger than the minimum size
         if (abs(current->max_point.x - current->min_point.x)/2.0 < min_node_size) {
           current->is_gray = true;

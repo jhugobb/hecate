@@ -4,6 +4,8 @@
 
 class TriangleMesh;
 
+#include "BBox.h"
+
 class Triangle {
 
   public:
@@ -13,7 +15,10 @@ class Triangle {
     unsigned int getV2();
     unsigned int getV3();
     double min_x;
+    Geo::BBox tri_bbox;
     void saveMinX(TriangleMesh* m);
+    void calculateTriBbox(std::vector<glm::vec3> &vertices);
+
     
     bool operator < (const Triangle& tr2) const {
       return (min_x < tr2.min_x);

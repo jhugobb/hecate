@@ -42,7 +42,7 @@ Grid::Grid(unsigned int size, Geo::BBox space_) {
 
 bool Grid::testVoxelGray_Naive(int &representative, glm::vec3 voxel_min, glm::vec3 voxel_max, std::vector<int> candidates) {
   // Naive approach: for each triangle in the node, check if intersects the voxel
-  std::vector<Triangle> triangles = mesh_->getTriangles();
+  std::vector<Triangle*> triangles = mesh_->getTriangles();
   for (int tri_idx : candidates) {
     if (Geo::testBoxTriangle(mesh_, triangles[tri_idx], voxel_min, voxel_max)) {
       representative = tri_idx;
@@ -53,29 +53,23 @@ bool Grid::testVoxelGray_Naive(int &representative, glm::vec3 voxel_min, glm::ve
 }
 
 void Grid::testVoxelGray_Box(int z, 
-                             Voxel* voxels, 
+                             std::vector<Voxel> &voxels, 
                              std::vector<int> &candidates, 
                              glm::vec2 &row_coords) {
-  std::vector<Triangle> triangles = mesh_->getTriangles();
+  std::vector<Triangle*> triangles = mesh_->getTriangles();
   std::vector<glm::vec3> verts = mesh_->getVertices();
   // Box approach: for each triangle in the row, check which voxels it intersects
   for (int tri_idx : candidates) {
 
-    Triangle tri = triangles[tri_idx];
+    Triangle* tri = triangles[tri_idx];
 
-    glm::vec3 v1 = verts[tri.getV1()];
-    glm::vec3 v2 = verts[tri.getV2()];
-    glm::vec3 v3 = verts[tri.getV3()];
-
-    Geo::BBox tri_box;
-
-    tri_box.addPoint(v1);
-    tri_box.addPoint(v2);
-    tri_box.addPoint(v3);
+    glm::vec3 v1 = verts[tri->getV1()];
+    glm::vec3 v2 = verts[tri->getV2()];
+    glm::vec3 v3 = verts[tri->getV3()];
 
     // Save Bbox of triangle
-    glm::vec3 min_box_tri = tri_box.minPoint;
-    glm::vec3 max_box_tri = tri_box.maxPoint;
+    glm::vec3 min_box_tri = tri->tri_bbox.minPoint;
+    glm::vec3 max_box_tri = tri->tri_bbox.maxPoint;
 
     // translate to origin
     min_box_tri -= space.minPoint;
@@ -124,9 +118,9 @@ void Grid::writePLY(int x, int y, int z, Voxel &voxel, std::ofstream &out_fobj) 
 void Grid::calculateBlackWhite(int z, 
                                glm::vec2 coords, 
                                node* quad_node, 
-                               Voxel* voxels, 
+                               std::vector<Voxel>& voxels, 
                                double threshold) {
-  std::vector<Triangle> triangles = mesh_->getTriangles();
+  std::vector<Triangle*> triangles = mesh_->getTriangles();
   std::vector<glm::vec3> vertices = mesh_->getVertices();
   // One row of intersections for each ray
   std::vector<double> intersect_xs;
@@ -141,10 +135,10 @@ void Grid::calculateBlackWhite(int z,
 
   for (int tri_idx : quad_node->members) {
     glm::vec3 v1, v2, v3;
-    Triangle t = triangles[tri_idx];
-    v1 = vertices[t.getV1()];
-    v2 = vertices[t.getV2()];
-    v3 = vertices[t.getV3()];
+    Triangle* t = triangles[tri_idx];
+    v1 = vertices[t->getV1()];
+    v2 = vertices[t->getV2()];
+    v3 = vertices[t->getV3()];
     glm::vec3 rayDirection = glm::vec3(1,0,0);
 
     // Keep changing rays until all are valid
@@ -175,7 +169,7 @@ void Grid::calculateBlackWhite(int z,
 }
 
 void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration config, std::string filename) {
-  std::vector<Triangle> triangles = mesh->getTriangles();
+  std::vector<Triangle*> triangles = mesh->getTriangles();
   std::vector<glm::vec3> vertices = mesh->getVertices();
   mesh_ = mesh;
 
@@ -204,7 +198,7 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration con
   }
 
   for (unsigned int y = 0; y < size_; y++) {
-    Voxel voxels[size_*size_];
+    std::vector<Voxel> voxels(size_*size_);
     #pragma omp parallel for
     for (unsigned int z = 0; z < size_; z++) {
       glm::vec2 coords;
@@ -267,10 +261,10 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration con
               v.color = VoxelColor::GRAY;
               if (config.writePLY) {
                 glm::vec3 normal;
-                Triangle t = triangles[representative];
-                glm::vec3 v1 = vertices[t.getV1()];
-                glm::vec3 v2 = vertices[t.getV2()];
-                glm::vec3 v3 = vertices[t.getV3()];
+                Triangle* t = triangles[representative];
+                glm::vec3 v1 = vertices[t->getV1()];
+                glm::vec3 v2 = vertices[t->getV2()];
+                glm::vec3 v3 = vertices[t->getV3()];
 
                 normal = glm::normalize(glm::cross(v3-v2, v3-v1));
                 v.normal = normal;
@@ -318,7 +312,7 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration con
 
 }
 
-void Grid::saveSliceAsPNG(Voxel* voxels, uint y) {
+void Grid::saveSliceAsPNG(std::vector<Voxel> &voxels, uint y) {
 
   std::vector<unsigned char> image(size_*size_*4);
   for (uint x = 0; x < size_; x++) {
@@ -360,7 +354,7 @@ void Grid::saveSliceAsPNG(Voxel* voxels, uint y) {
   // else lodepng::save_file(buffer, filename);
 }
 
-void Grid::saveSliceAsHEC(Voxel* voxels, std::ofstream &bin_file) {
+void Grid::saveSliceAsHEC(std::vector<Voxel> &voxels, std::ofstream &bin_file) {
 
   char* slice_memblock;
 

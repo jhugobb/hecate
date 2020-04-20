@@ -64,7 +64,7 @@ bool testPointsVsAxis(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 axis, 
   return true;
 }
 
-bool testQuadTriangle(TriangleMesh* mesh, Triangle t, glm::vec2 min_point, glm::vec2 max_point) {
+bool testQuadTriangle(TriangleMesh* mesh, Triangle *t, glm::vec2 &min_point, glm::vec2 &max_point) {
   Geo::BBox box;
 
   glm::vec3 min_point_3d(0, min_point.x, min_point.y);
@@ -74,13 +74,11 @@ bool testQuadTriangle(TriangleMesh* mesh, Triangle t, glm::vec2 min_point, glm::
   box.addPoint(max_point_3d);
 
   glm::vec3 v1o, v2o, v3o;
-  std::vector<Triangle> tris = mesh->getTriangles();
   std::vector<glm::vec3> vertices = mesh->getVertices();
   
-  v1o = vertices[t.getV1()];
-  v2o = vertices[t.getV2()];
-  v3o = vertices[t.getV3()];
-
+  v1o = vertices[t->getV1()];
+  v2o = vertices[t->getV2()];
+  v3o = vertices[t->getV3()];
 
   const glm::vec3 center_box = (box.minPoint + box.maxPoint) / 2.0f;
 
@@ -96,15 +94,9 @@ bool testQuadTriangle(TriangleMesh* mesh, Triangle t, glm::vec2 min_point, glm::
   glm::vec2 v1_2d = glm::vec2(v1.y, v1.z);
   glm::vec2 v2_2d = glm::vec2(v2.y, v2.z);
   glm::vec2 v3_2d = glm::vec2(v3.y, v3.z);
-  
-  Geo::BBox tri_bbox;
 
-  tri_bbox.addPoint(v1o);
-  tri_bbox.addPoint(v2o);
-  tri_bbox.addPoint(v3o);
-
-  if (!testAABoxAABox_2D(glm::vec2(tri_bbox.minPoint.y, tri_bbox.minPoint.z), 
-                         glm::vec2(tri_bbox.maxPoint.y, tri_bbox.maxPoint.z),
+  if (!testAABoxAABox_2D(glm::vec2(t->tri_bbox.minPoint.y, t->tri_bbox.minPoint.z), 
+                         glm::vec2(t->tri_bbox.maxPoint.y, t->tri_bbox.maxPoint.z),
                          glm::vec2(box.minPoint.y, box.minPoint.z),
                          glm::vec2(box.maxPoint.y, box.maxPoint.z)))
     return false;
@@ -130,7 +122,7 @@ bool testQuadTriangle(TriangleMesh* mesh, Triangle t, glm::vec2 min_point, glm::
 }
 
 
-bool testBoxTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::vec3 max_point, bool test2D) {
+bool testBoxTriangle(TriangleMesh* mesh, Triangle *t, glm::vec3 &min_point, glm::vec3 &max_point, bool test2D) {
 
   Geo::BBox box;
 
@@ -138,12 +130,11 @@ bool testBoxTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::v
   box.addPoint(max_point);
 
   glm::vec3 v1o, v2o, v3o;
-  std::vector<Triangle> tris = mesh->getTriangles();
   std::vector<glm::vec3> vertices = mesh->getVertices();
   
-  v1o = vertices[t.getV1()];
-  v2o = vertices[t.getV2()];
-  v3o = vertices[t.getV3()];
+  v1o = vertices[t->getV1()];
+  v2o = vertices[t->getV2()];
+  v3o = vertices[t->getV3()];
 
 
   const glm::vec3 center_box = (box.minPoint + box.maxPoint) / 2.0f;
@@ -152,14 +143,8 @@ bool testBoxTriangle(TriangleMesh* mesh, Triangle t, glm::vec3 min_point, glm::v
   glm::vec3 v2 = v2o - center_box;
   glm::vec3 v3 = v3o - center_box;
 
-  Geo::BBox tri_bbox;
-
-  tri_bbox.addPoint(v1o);
-  tri_bbox.addPoint(v2o);
-  tri_bbox.addPoint(v3o);
-
   // If their bounding boxes don't intersect, they definitely don't intersect
-  if (!testAABoxAABox(tri_bbox, box)) return false;
+  if (!testAABoxAABox(t->tri_bbox, box)) return false;
   
   const glm::vec3 f1 = v2-v1;
   const glm::vec3 f2 = v3-v2;
