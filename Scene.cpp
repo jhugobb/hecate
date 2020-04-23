@@ -174,6 +174,8 @@ void Scene::render_gui()
 	ImGui::Spacing();
 	ImGui::Checkbox("Write Hecate File?", &config.writeHEC);
 	ImGui::Spacing();
+	ImGui::Checkbox("Calculate Statistics as CSV?", &config.writeCSV);
+	ImGui::Separator();
 
 	// Grid parameters
 	ImGui::Text("Grid Parameters");

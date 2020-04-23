@@ -15,6 +15,7 @@ struct ColoringConfiguration {
   bool writePNG;
   bool writePLY;
   bool writeHEC;
+  bool writeCSV;
 };
 
 class Grid {
@@ -77,6 +78,16 @@ class Grid {
 
     TriangleMesh* mesh_;
 
+    std::vector<uint> white_runs;
+    std::vector<uint> black_runs;
+    std::vector<uint> gray_runs;
+    
+    uint current_run = 0;
+    VoxelColor current_run_color = VoxelColor::WHITE;
+
+    std::vector<Voxel> lastSlice;
+    std::vector<double> similarPercents;
+
     bool testVoxelGray_Naive(int &representative, glm::vec3 voxel_min, glm::vec3 voxel_max, std::vector<int> candidates);
     
     void testVoxelGray_Box(int z, std::vector<Voxel> &voxels, std::vector<int> &candidates, glm::vec2 &row_coords);
@@ -92,6 +103,10 @@ class Grid {
     void saveSliceAsPNG(std::vector<Voxel> &voxels, uint y);
 
     void saveSliceAsHEC(std::vector<Voxel> &voxels, std::ofstream &bin_file);
+
+    void calculateStatistics(std::vector<Voxel> &voxels, int y);
+
+    void writeCSV();
 
 };  
 #endif

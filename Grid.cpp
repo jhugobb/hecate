@@ -288,18 +288,22 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration con
       }
     }
     if (config.writePNG) {
-      #pragma omp critical 
+      // #pragma omp critical 
       {
         saveSliceAsPNG(voxels, y);
       }
     }
 
     if (config.writeHEC) {
-      #pragma omp critical
+      // #pragma omp critical
       {
         // Write Hecate (binary file)
         saveSliceAsHEC(voxels, bin_file);
       }
+    }
+
+    if (config.writeCSV) {
+      calculateStatistics(voxels, y);
     }
   }
 
@@ -307,6 +311,11 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration con
     out_fobj.seekp(file_verts_line, std::ios::beg);
     out_fobj << string_format("element vertex %20d\r\n", num_points);
   }
+
+  if (config.writeCSV) {
+    writeCSV();
+  }
+
   out_fobj.close();
   bin_file.close();
 
@@ -398,5 +407,85 @@ void Grid::saveSliceAsHEC(std::vector<Voxel> &voxels, std::ofstream &bin_file) {
     std::cout << "Unable to open file." << std::endl;
     assert(false);
   }
+}
 
+void Grid::calculateStatistics(std::vector<Voxel> &voxels, int y) {
+
+  // Runs
+  for (uint z = 0; z < size_; z++) { 
+    for (uint x = 0; x < size_; x++) {
+      if (voxels[z*size_ + x].color == current_run_color) current_run++;
+      else {
+        if (current_run > 0) {
+          switch (current_run_color) {
+            case VoxelColor::WHITE:
+              white_runs.push_back(current_run);
+              break;
+            case VoxelColor::BLACK:
+              black_runs.push_back(current_run);
+              break;
+            case VoxelColor::GRAY:
+              gray_runs.push_back(current_run);
+              break;
+          }
+          current_run = 0;
+        }
+        current_run_color = voxels[z*size_+x].color;
+        current_run = 1;
+      }
+    }
+  }
+
+  // Last Slice
+  if (y == 0) {
+    lastSlice = std::vector<Voxel>(voxels);
+    return;
+  }
+  double count = 0;
+  for (uint z = 0; z < size_; z++) { 
+    for (uint x = 0; x < size_; x++) {
+      if (voxels[z*size_+x].color == lastSlice[z*size_+x].color){
+        count++;
+      }
+    }
+  }
+
+  similarPercents.push_back(count / (double) (size_*size_) * 100);
+  lastSlice = std::vector<Voxel>(voxels);
+}
+
+void Grid::writeCSV() {
+  std::ofstream out_csv("test_runs.csv");
+  
+  uint max = std::max(white_runs.size(), std::max(black_runs.size(), gray_runs.size()));
+
+  out_csv << "White Runs,Black Runs,Gray Runs\n";
+  for (uint i = 0; i < max; i++) {
+    if (i < white_runs.size()) {
+      out_csv << std::to_string(white_runs[i]);
+    }
+    out_csv << ",";
+
+    if (i < black_runs.size()) {
+      out_csv << std::to_string(black_runs[i]);
+    }
+    out_csv << ",";
+
+    if (i < gray_runs.size()) {
+      out_csv << std::to_string(gray_runs[i]);
+    }
+    out_csv << "\n";
+  }
+  out_csv.close();
+
+  std::ofstream out_csv_slice("test_slice.csv");
+  out_csv_slice << "Number of slice,Percentage of similarity\n";
+
+  for (uint i = 0; i < similarPercents.size(); i++) {
+    out_csv_slice << std::to_string(i+1) << ",";
+    out_csv_slice << std::to_string(similarPercents[i]);
+    out_csv_slice << "\n";
+  }
+
+  out_csv_slice.close();
 }
