@@ -84,6 +84,9 @@ class TwoDGrid {
     // Triangle mesh pointer of the model
     TriangleMesh* m;
 
+    // Triangles of the mesh
+    std::vector<Triangle*> triangles;
+
     // Number of nodes in a dimension
     int num_nodes;
 

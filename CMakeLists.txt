@@ -9,7 +9,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -fopenmp")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -fopenmp -Wextra")
 
 execute_process(COMMAND ln -s ../shaders)
 

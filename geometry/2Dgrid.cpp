@@ -29,8 +29,9 @@ TwoDGrid::TwoDGrid(TriangleMesh* m_, int size, Geo::BBox space_) {
       grid[y * num_nodes + z]->max_point = max_box;
       grid[y * num_nodes + z]->members = std::vector<int>();
     }
-
   }
+
+  triangles = m->getTriangles();
 }
 
 TwoDGrid::~TwoDGrid() {
@@ -45,10 +46,8 @@ TwoDGrid::~TwoDGrid() {
 }
 
 void TwoDGrid::insert(int t) {
-  std::vector<Triangle*> tris = m->getTriangles();
-  std::vector<glm::vec3> verts = m->getVertices();
 
-  Triangle* tri = tris[t];
+  Triangle* tri = triangles[t];
 
   // Save Bbox of triangle
   glm::vec3 min_box_tri = tri->tri_bbox.minPoint;
@@ -88,8 +87,8 @@ void TwoDGrid::insert(int t) {
 void TwoDGrid::buildBinTrees() {
 
   #pragma omp parallel
-  for (uint i = 0; i < m->getTriangles().size(); i++) {
-    m->getTriangles()[i]->saveMinX(m);
+  for (uint i = 0; i < triangles.size(); i++) {
+    triangles[i]->saveMinX(m);
   }
   #pragma omp parallel for
   for (int y = 0; y < num_nodes; y++) {

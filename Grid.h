@@ -72,6 +72,12 @@ class Grid {
     // Bounding Box of the model
     Geo::BBox space;
 
+    // Triangles of the mesh_
+    std::vector<Triangle*> triangles;
+
+    // Vertices of the mesh_
+    std::vector<glm::vec3> vertices;
+    
     // Vector of voxels
     // TODO change to only have a single row of voxels at any given point in time
     std::vector<Voxel> elements;

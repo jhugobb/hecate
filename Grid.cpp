@@ -42,7 +42,6 @@ Grid::Grid(unsigned int size, Geo::BBox space_) {
 
 bool Grid::testVoxelGray_Naive(int &representative, glm::vec3 voxel_min, glm::vec3 voxel_max, std::vector<int> candidates) {
   // Naive approach: for each triangle in the node, check if intersects the voxel
-  std::vector<Triangle*> triangles = mesh_->getTriangles();
   for (int tri_idx : candidates) {
     if (Geo::testBoxTriangle(mesh_, triangles[tri_idx], voxel_min, voxel_max)) {
       representative = tri_idx;
@@ -56,16 +55,15 @@ void Grid::testVoxelGray_Box(int z,
                              std::vector<Voxel> &voxels, 
                              std::vector<int> &candidates, 
                              glm::vec2 &row_coords) {
-  std::vector<Triangle*> triangles = mesh_->getTriangles();
-  std::vector<glm::vec3> verts = mesh_->getVertices();
   // Box approach: for each triangle in the row, check which voxels it intersects
-  for (int tri_idx : candidates) {
-
+  #pragma omp parallel for
+  for (uint i = 0; i < candidates.size(); i++) {
+    int tri_idx = candidates[i];
     Triangle* tri = triangles[tri_idx];
 
-    glm::vec3 v1 = verts[tri->getV1()];
-    glm::vec3 v2 = verts[tri->getV2()];
-    glm::vec3 v3 = verts[tri->getV3()];
+    glm::vec3 v1 = vertices[tri->getV1()];
+    glm::vec3 v2 = vertices[tri->getV2()];
+    glm::vec3 v3 = vertices[tri->getV3()];
 
     // Save Bbox of triangle
     glm::vec3 min_box_tri = tri->tri_bbox.minPoint;
@@ -120,8 +118,6 @@ void Grid::calculateBlackWhite(int z,
                                node* quad_node, 
                                std::vector<Voxel>& voxels, 
                                double threshold) {
-  std::vector<Triangle*> triangles = mesh_->getTriangles();
-  std::vector<glm::vec3> vertices = mesh_->getVertices();
   // One row of intersections for each ray
   std::vector<double> intersect_xs;
   glm::vec3 origin;
@@ -169,10 +165,11 @@ void Grid::calculateBlackWhite(int z,
 }
 
 void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration config, std::string filename) {
-  std::vector<Triangle*> triangles = mesh->getTriangles();
-  std::vector<glm::vec3> vertices = mesh->getVertices();
+  // std::vector<Triangle*> triangles = mesh->getTriangles();
+  // std::vector<glm::vec3> vertices = mesh->getVertices();
   mesh_ = mesh;
-
+  triangles = mesh_->getTriangles();
+  vertices = mesh_->getVertices();
   // For PLY writing
   std::ofstream out_fobj(filename);
   std::streampos file_verts_line;
