@@ -171,14 +171,15 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration con
   triangles = mesh_->getTriangles();
   vertices = mesh_->getVertices();
   // For PLY writing
-  std::ofstream out_fobj(filename);
+  std::ofstream out_fobj;
   std::streampos file_verts_line;
   uint num_points = 0;
 
   // For Binary file writing
-  std::ofstream bin_file("test.hec", std::ios::binary | std::ios::out);
+  std::ofstream bin_file;
 
   if (config.writePLY) {
+    out_fobj.open(filename + "_" + std::to_string(size_) + ".ply");
     out_fobj<< "ply\r\n"
             << "format ascii 1.0\r\n";
 
@@ -193,6 +194,8 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration con
             << "property uchar blue\r\n"
             << "end_header\r\n";
   }
+
+  if (config.writeHEC) bin_file.open(filename + "_" + std::to_string(size_) + ".hec", std::ios::binary | std::ios::out);
 
   for (unsigned int y = 0; y < size_; y++) {
     std::vector<Voxel> voxels(size_*size_);
@@ -310,7 +313,7 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration con
   }
 
   if (config.writeCSV) {
-    writeCSV();
+    writeCSV(config.filename);
   }
 
   out_fobj.close();
@@ -451,8 +454,8 @@ void Grid::calculateStatistics(std::vector<Voxel> &voxels, int y) {
   lastSlice = std::vector<Voxel>(voxels);
 }
 
-void Grid::writeCSV() {
-  std::ofstream out_csv("test_runs.csv");
+void Grid::writeCSV(std::string filename) {
+  std::ofstream out_csv("runs_"+ filename  + "_" + std::to_string(size_) + ".csv");
   
   uint max = std::max(white_runs.size(), std::max(black_runs.size(), gray_runs.size()));
 
@@ -475,7 +478,7 @@ void Grid::writeCSV() {
   }
   out_csv.close();
 
-  std::ofstream out_csv_slice("test_slice.csv");
+  std::ofstream out_csv_slice("similarities_" + filename + "_" + std::to_string(size_) + ".csv");
   out_csv_slice << "Number of slice,Percentage of similarity\n";
 
   for (uint i = 0; i < similarPercents.size(); i++) {

@@ -15,11 +15,12 @@ int main(int argc, char **argv)
 	// ./bash_hecate filename grid_size #voxelization_technique 
 	// calculateblackwhite? thresholdraycasting writePNG? writePLY? writeCSV?
 	
-	if (argc != 9) {
-		cout << "Usage: ./hecate_bash filename grid_size #voxelization_technique calculateblackwhite? thresholdraycasting writePNG? writePLY? writeCSV?\n";
+	if (argc != 10) {
+		cout << "Usage: ./hecate_bash filename grid_size #voxelization_technique calculateblackwhite? thresholdraycasting writePNG? writePLY? writeCSV? writeHEC?\n";
 		return -1;
 	} 
 
+	//Filename needs to be models/path/to/model
 	std::string filename(argv[1]);
 	
 	ColoringConfiguration config;
@@ -35,8 +36,11 @@ int main(int argc, char **argv)
 	config.writePNG = std::stoi(argv[6]) == 1;
 	config.writePLY = std::stoi(argv[7]) == 1;
 	config.writeCSV = std::stoi(argv[8]) == 1;
+	config.writeHEC = std::stoi(argv[9]) == 1;
 
-	TriangleMesh* mesh;
+	// Make sure that output/ exists
+	config.filename = "output/" + filename.substr(7,filename.size()-4-7) + "_new";
+	std::cout << "filename " <<  config.filename << std::endl;
 
 	ifstream fin;
 	
@@ -45,9 +49,9 @@ int main(int argc, char **argv)
 	if(!fin.is_open())
 		return false;
 	
-	if(mesh != NULL)
-		delete mesh;
+	TriangleMesh* mesh = NULL;
 	mesh = new TriangleMesh();
+
 	if(mesh->load(filename)) {
 		cout << "Triangle mesh " << filename << " loaded. ";
 		cout << mesh->getVertices().size() << " vertices. ";
@@ -118,7 +122,7 @@ int main(int argc, char **argv)
 	// VOXELIZATION
 	clock_gettime(CLOCK_REALTIME, &begin_vox);
 	
-	grid.colorGrid(mesh, twodgrid, config, "test.ply");
+	grid.colorGrid(mesh, twodgrid, config, config.filename);
 
 	clock_gettime(CLOCK_REALTIME, &end_vox);
 

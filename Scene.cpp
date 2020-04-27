@@ -43,6 +43,7 @@ void Scene::init()
 	config.grid_size = 64;
 	config.writePLY = true;
 	config.writePNG = true;
+	config.filename = "test";
 	// lambda = 1.f;
 	// selectedIterativeFunction = 0;
 	// selectedGlobalFunction = 0;
@@ -175,6 +176,11 @@ void Scene::render_gui()
 	ImGui::Checkbox("Write Hecate File?", &config.writeHEC);
 	ImGui::Spacing();
 	ImGui::Checkbox("Calculate Statistics as CSV?", &config.writeCSV);
+	ImGui::Spacing();
+	ImGui::Text("Prefix of files written: ");
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(110);
+	ImGui::InputText("##Filename", &config.filename.at(0), 64);
 	ImGui::Separator();
 
 	// Grid parameters
@@ -239,7 +245,7 @@ void Scene::render_gui()
 		// VOXELIZATION
 		clock_gettime(CLOCK_REALTIME, &begin_vox);
 		
-		grid.colorGrid(mesh, twodgrid, config, "test.ply");
+		grid.colorGrid(mesh, twodgrid, config, config.filename);
 
 		clock_gettime(CLOCK_REALTIME, &end_vox);
 

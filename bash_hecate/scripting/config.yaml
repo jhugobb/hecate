@@ -1,0 +1,10 @@
+# Configuration of python script for data generation
+output: "output.txt"
+grid_size: [256, 126, 512]
+calculate_BW: false
+voxelization_tech: 1
+thresh_raycasting: 0.0
+png: false
+ply: true
+csv: false
+hec: false

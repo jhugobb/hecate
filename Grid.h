@@ -16,6 +16,7 @@ struct ColoringConfiguration {
   bool writePLY;
   bool writeHEC;
   bool writeCSV;
+  std::string filename;
 };
 
 class Grid {
@@ -112,7 +113,7 @@ class Grid {
 
     void calculateStatistics(std::vector<Voxel> &voxels, int y);
 
-    void writeCSV();
+    void writeCSV(std::string filename);
 
 };  
 #endif
