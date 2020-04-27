@@ -24,8 +24,6 @@ include_directories(${OPENGL_INCLUDE_DIRS})
 include_directories(${GLUT_INCLUDE_DIRS})
 include_directories(${GLM_INCLUDE_DIRS})
 include_directories("${CMAKE_SOURCE_DIR}/gl3w")
-include_directories("${CMAKE_SOURCE_DIR}/eigen")
-include_directories("${CMAKE_SOURCE_DIR}/nanoflann")
 
 link_directories(${OPENGL_LIBRARY_DIRS})
 link_directories(${GLUT_LIBRARY_DIRS})
@@ -46,7 +44,7 @@ file(GLOB hecate_SRC
     "lodepng/lodepng.cpp"
 )
 
-add_executable(${appName} ${imgui_files} ${gl3w_files} ${nanoflann_files} ${hecate_SRC})
+add_executable(${appName} ${imgui_files} ${gl3w_files} ${hecate_SRC})
 
 target_link_libraries(${appName} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
 

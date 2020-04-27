@@ -91,9 +91,9 @@ bool Scene::loadScan(const char *filename)
 	originalVertices.clear();
 	copy(mesh->getVertices().begin(), mesh->getVertices().end(), std::back_inserter(originalVertices));
 	
-	for (uint i = 0; i < mesh->getVertices().size(); i++) {
-		model_bbox.addPoint(mesh->getVertices()[i]);
-	}
+	// for (uint i = 0; i < mesh->getVertices().size(); i++) {
+	// 	model_bbox.addPoint(mesh->getVertices()[i]);
+	// }
 	return true;
 }
 
