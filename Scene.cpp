@@ -40,7 +40,7 @@ void Scene::init()
 	bLighting = true;
 	bWireframe = false;
 	config.selectedVoxelization = 1;
-	config.grid_size = 64;
+	config.grid_size = 512;
 	config.writePLY = true;
 	config.writePNG = true;
 	config.filename = "test";

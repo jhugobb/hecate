@@ -96,7 +96,6 @@ class Grid {
     VoxelColor curr_colors[6];
     bool needs_to_set_color[6] = {true,true,true,true,true,true};
 
-
     std::vector<Voxel> lastSlice;
     std::vector<double> similarPercents;
 
@@ -118,7 +117,7 @@ class Grid {
 
     void saveSliceAsHEC_RLE_Naive_8b(std::vector<Voxel> &voxels, std::ofstream &bin_file, int y);
     
-    void saveSliceAsHEC_RLE_Naive_16b(std::vector<Voxel> &voxels, std::ofstream &bin_file);
+    void saveSliceAsHEC_RLE_Naive_16b(std::vector<Voxel> &voxels, std::ofstream &bin_file, int y);
 
     void calculateStatistics(std::vector<Voxel> &voxels, int y);
 
