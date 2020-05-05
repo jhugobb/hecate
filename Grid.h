@@ -93,8 +93,17 @@ class Grid {
     VoxelColor current_run_color = VoxelColor::WHITE;
 
     int curr_runs[6] = {0,0,0,0,0,0}; 
-    VoxelColor curr_colors[6];
+    VoxelColor curr_colors[6] = {VoxelColor::WHITE,
+                                 VoxelColor::WHITE,
+                                 VoxelColor::WHITE,
+                                 VoxelColor::WHITE,
+                                 VoxelColor::WHITE,
+                                 VoxelColor::WHITE};
+                                 
     bool needs_to_set_color[6] = {true,true,true,true,true,true};
+    // used for alt
+    int n_times_switched[2] = {0, 0}; 
+    bool wroteAll1s[2] = {false, false};
 
     std::vector<Voxel> lastSlice;
     std::vector<double> similarPercents;
@@ -118,6 +127,8 @@ class Grid {
     void saveSliceAsHEC_RLE_Naive_8b(std::vector<Voxel> &voxels, std::ofstream &bin_file, int y);
     
     void saveSliceAsHEC_RLE_Naive_16b(std::vector<Voxel> &voxels, std::ofstream &bin_file, int y);
+
+    void saveSliceAsHEC_RLE_Alt_8b(std::vector<Voxel> &voxels, std::ofstream &bin_file, int y);
 
     void calculateStatistics(std::vector<Voxel> &voxels, int y);
 
