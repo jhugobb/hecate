@@ -6,7 +6,7 @@ import yaml
 # ./run.py hecate_bash_path folder_with_models configfile
 def main():
   if len(sys.argv) != 4: 
-    print("Usage: ./run.py hecate_bash_path folder_with_models configfile")
+    print("Usage: ./run_hecate.py hecate_bash_path folder_with_models configfile")
     return -1
 
   args = sys.argv
