@@ -91,7 +91,7 @@ int main(int argc, char **argv)
 	}
 
 	clock_gettime(CLOCK_REALTIME, &end_grid);
-	std::cout << "Finished Two D Grid in " << end_grid.tv_sec - begin.tv_sec << " s." << std::endl;
+	std::cout << "Finished Two D Grid in " << end_grid.tv_sec - begin.tv_sec + ((end_grid.tv_nsec - begin.tv_nsec) / 1E9) << " s." << std::endl;
 	/* =================== 2D Grid =================== */
 	
 
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
 			clock_gettime(CLOCK_REALTIME, &begin_bt);
 			twodgrid->buildBinTrees();
 			clock_gettime(CLOCK_REALTIME, &end_bt);
-			std::cout << "Finished Bin Tree Creation in " << end_bt.tv_sec - begin_bt.tv_sec << " s." << std::endl;
+			std::cout << "Finished Bin Tree Creation in " << end_bt.tv_sec - begin_bt.tv_sec + ((end_bt.tv_nsec - begin_bt.tv_nsec) / 1E9)<< " s." << std::endl;
 			config.useNaive = false;
 			config.useBox = false;
 			break;
@@ -126,13 +126,13 @@ int main(int argc, char **argv)
 
 	clock_gettime(CLOCK_REALTIME, &end_vox);
 
-	std::cout << "Finished Voxelization in " << end_vox.tv_sec - begin_vox.tv_sec << " s." << std::endl;
+	std::cout << "Finished Voxelization in " << end_vox.tv_sec - begin_vox.tv_sec + ((end_vox.tv_nsec - begin_vox.tv_nsec) / 1E9)<< " s." << std::endl;
 	delete twodgrid;
 	/* =================== Voxelization =================== */
 
 	clock_gettime(CLOCK_REALTIME, &end);
 	
-	std::cout << "Finished execution in " << end.tv_sec - begin.tv_sec << " s." << std::endl;
+	std::cout << "Finished execution in " << end.tv_sec - begin.tv_sec + ((end.tv_nsec - begin.tv_nsec) / 1E9)<< " s." << std::endl;
 	return 0;
 }
 

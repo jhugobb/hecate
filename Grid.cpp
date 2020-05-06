@@ -205,11 +205,12 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration con
     bin_file_rle_naive_8.open(filename + "_" + std::to_string(size_) + "rle_n_8.hec", std::ios::binary | std::ios::out);
     bin_file_rle_naive_16.open(filename + "_" + std::to_string(size_) + "rle_n_16.hec", std::ios::binary | std::ios::out);
     bin_file_rle_alternated_8.open(filename + "_" + std::to_string(size_) + "rle_a_8.hec", std::ios::binary | std::ios::out);
-    // bin_file_rle_alternated_16.open(filename + "_" + std::to_string(size_) + "rle_a_16.hec", std::ios::binary | std::ios::out);
+    bin_file_rle_alternated_16.open(filename + "_" + std::to_string(size_) + "rle_a_16.hec", std::ios::binary | std::ios::out);
     char16_t resolution_bits = static_cast<char16_t>(size_); 
     bin_file_rle_naive_8.write((char*) &resolution_bits, sizeof(resolution_bits));
     bin_file_rle_naive_16.write((char*) &resolution_bits, sizeof(resolution_bits));
     bin_file_rle_alternated_8.write((char*) &resolution_bits, sizeof(resolution_bits));
+    bin_file_rle_alternated_16.write((char*) &resolution_bits, sizeof(resolution_bits));
   }
 
   for (unsigned int y = 0; y < size_; y++) {
@@ -317,6 +318,7 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration con
         saveSliceAsHEC_RLE_Naive_8b(voxels, bin_file_rle_naive_8, y);
         saveSliceAsHEC_RLE_Naive_16b(voxels, bin_file_rle_naive_16, y);
         saveSliceAsHEC_RLE_Alt_8b(voxels, bin_file_rle_alternated_8, y);
+        saveSliceAsHEC_RLE_Alt_16b(voxels, bin_file_rle_alternated_16, y);
       }
     }
 
@@ -339,8 +341,7 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration con
     bin_file_rle_naive_8.close();
     bin_file_rle_naive_16.close();
     bin_file_rle_alternated_8.close();
-
-    // bin_file_rle_alternated_16.close();
+    bin_file_rle_alternated_16.close();
   }
 
 }
@@ -633,15 +634,10 @@ void Grid::saveSliceAsHEC_RLE_Alt_8b(std::vector<Voxel> &voxels, std::ofstream &
     const int size_run = 254; // 2^8 - 1 - 1 (255 means jumping color)
     std::vector<std::bitset<8>> runs_to_write;
     std::bitset<8> bits_to_write;
-    // VoxelColor lastColorBeforeGray = VoxelColor::WHITE;
-    // bool needs_to_set_last = true;
-    // bool wroteGray = false;
-
+    
     for (uint z = 0; z < size_; z++) { 
       for (uint x = 0; x < size_; x++) {
 
-
-        
         // WORKS
         if (voxels[z*size_ + x].color == curr_colors[3]) {
           curr_runs[3]++;
@@ -674,127 +670,6 @@ void Grid::saveSliceAsHEC_RLE_Alt_8b(std::vector<Voxel> &voxels, std::ofstream &
           }
         }
 
-        // WORKS but slower
-
-        // if (needs_to_set_color[3]) {
-        //   curr_colors[3] = voxels[z*size_ + x].color;
-        //   needs_to_set_color[3] = false;
-        // }
-
-        // if (voxels[z*size_ + x].color == VoxelColor::GRAY) {
-        //   bits_to_write = std::bitset<8>(curr_runs[3]);
-        //   runs_to_write.push_back(bits_to_write);
-        //   curr_runs[3] = 0;
-        //   wroteGray = true;
-        //   n_times_switched[0]++;
-        //   curr_runs[5]++;
-        //   // needs_to_set_color[3] = true;
-        // } else {
-        //   if (voxels[z*size_ + x].color == curr_colors[3]) {
-        //     curr_runs[3]++;
-        //     if (curr_runs[3] >= size_run) {
-        //       bits_to_write = std::bitset<8>(curr_runs[3]);
-        //       runs_to_write.push_back(bits_to_write);
-        //       // needs_to_set_color[3] = true;
-        //       curr_runs[3] = 0;
-        //     }
-        //     if (wroteGray)
-        //       n_times_switched[0] = 0;
-        //   } else {
-        //     wroteAll1s[0] = false;
-        //     if (!wroteGray) {
-        //       bits_to_write = std::bitset<8>(curr_runs[3]);
-        //       runs_to_write.push_back(bits_to_write);
-        //     } else {
-        //       if (n_times_switched[0] % 2 != abs(voxels[z*size_ + x].color - curr_colors[3])) {
-        //         runs_to_write.push_back(std::bitset<8>(255));
-        //       } 
-        //       n_times_switched[0] = 0;
-        //     }
-          
-        //     curr_runs[3] = 1;
-        //     curr_colors[3] = voxels[z*size_ + x].color;
-        //   }
-        //   wroteGray = false;
-        // }
-
-
-        // DOES NOT WORK
-        // if (voxels[z*size_ + x].color == curr_colors[3]) {
-        //   if (wroteGray) {
-        //     // bits_to_write = std::bitset<8>(curr_runs[3]);
-        //     // runs_to_write.push_back(bits_to_write);
-        //     if (n_times_switched[0] % 2 != 0) {
-        //       runs_to_write.push_back(std::bitset<8>(255));
-        //     }
-        //   }
-        //   curr_runs[3]++;
-        //   if (curr_runs[3] >= size_run) {
-        //     bits_to_write = std::bitset<8>(curr_runs[3]);
-        //     runs_to_write.push_back(bits_to_write);
-        //     needs_to_set_color[3] = true;
-        //     curr_runs[3] = 0;
-        //     wroteAll1s[0] = true;
-        //   } else {
-        //     wroteAll1s[0] = false;
-        //   }
-        //   wroteGray = false;
-        // } else {
-          
-        //   if (voxels[z*size_ + x].color != VoxelColor::GRAY) {
-        //     if (n_times_switched[0] % 2 != abs(voxels[z*size_ + x].color - curr_colors[3])) {
-        //       runs_to_write.push_back(std::bitset<8>(255));
-        //     } 
-        //     curr_runs[3] = 1;
-        //     curr_colors[3] = voxels[z*size_ + x].color;
-        //     wroteGray = false;
-        //   } else {
-
-        //   }
-        //   wroteAll1s[0] = false;
-        // }
-
-        // DOES NOT WORK
-        // if (voxels[z*size_ + x].color == VoxelColor::GRAY) {
-        //   wroteGray = true;
-        //   bits_to_write = std::bitset<8>(curr_runs[3]);
-        //   runs_to_write.push_back(bits_to_write);
-        //   curr_runs[3] = 0;
-        //   needs_to_set_color[3] = true;
-        //   n_times_switched[0]++;
-        //   wroteAll1s[0] = false;
-        //   if (needs_to_set_last) {
-        //     lastColorBeforeGray = curr_colors[3];
-        //     needs_to_set_last = false;
-        //   }
-        // } else if (voxels[z*size_ + x].color == curr_colors[3]) {
-        //   // n_times_wrote_gray[0] % 2 will be 1 (black) if we wrote an odd number of grays, which is correct
-        //   // n_times_wrote_gray[0] % 2 will be 0 (white) if we wrote an even number of grays, which is correct
-        //   if (wroteGray && ((voxels[z*size_ + x].color == lastColorBeforeGray && n_times_switched[0] % 2 != 0) ||
-        //                     (voxels[z*size_ + x].color != lastColorBeforeGray && n_times_switched[0] % 2 == 0))) {
-        //     bits_to_write.set();
-        //     runs_to_write.push_back(bits_to_write);
-        //   }
-        //   curr_runs[3]++;
-        //   if (curr_runs[3] >= size_run) {
-        //     bits_to_write = std::bitset<8>(curr_runs[3]);
-        //     runs_to_write.push_back(bits_to_write);
-        //     needs_to_set_color[3] = true;
-        //     curr_runs[3] = 0;
-        //     wroteAll1s[0] = true;
-        //   }
-        //   needs_to_set_last = true;
-        //   wroteGray = false;
-        // } 
-        // else {
-        //   cout << "helo" << endl;
-        //   // bits_to_write = std::bitset<8>(curr_runs[3]);
-        //   // runs_to_write.push_back(bits_to_write);
-        //   // bits_to_write = std::bitset<8>(0);
-        //   // runs_to_write.push_back(bits_to_write);
-        //   // curr_runs[3] = 1;
-        //   // curr_colors[3] = voxels[z*size_ + x].color;
-        // }
       }
     }
 
@@ -816,6 +691,69 @@ void Grid::saveSliceAsHEC_RLE_Alt_8b(std::vector<Voxel> &voxels, std::ofstream &
     assert(false);
   }
 }
+
+void Grid::saveSliceAsHEC_RLE_Alt_16b(std::vector<Voxel> &voxels, std::ofstream &bin_file, int y) {
+  if (bin_file.is_open()) {
+    const int size_run = 65534; // 2^16 - 1 - 1 (65535 means jumping color)
+    std::vector<std::bitset<16>> runs_to_write;
+    std::bitset<16> bits_to_write;
+
+    for (uint z = 0; z < size_; z++) { 
+      for (uint x = 0; x < size_; x++) {
+        
+        // WORKS
+        if (voxels[z*size_ + x].color == curr_colors[4]) {
+          curr_runs[4]++;
+          if (curr_runs[4] >= size_run) {
+            assert(curr_runs[4] == 65534);
+            bits_to_write = std::bitset<16>(curr_runs[4]);
+            runs_to_write.push_back(bits_to_write);
+            curr_runs[4] = 0;
+          }
+        } else if (voxels[z*size_ + x].color == VoxelColor::GRAY){
+          bits_to_write = std::bitset<16>(curr_runs[4]);
+          runs_to_write.push_back(bits_to_write);
+          curr_colors[4] = static_cast<VoxelColor>((curr_colors[4]+1) % 2);
+          curr_runs[4] = 0;
+        } else {
+          if (curr_runs[4] == 0) {
+            // Run of unexpected color
+            bits_to_write = std::bitset<16>(65535);
+            runs_to_write.push_back(bits_to_write);
+            curr_colors[4] = static_cast<VoxelColor>((curr_colors[4]+1) % 2);
+            assert(curr_colors[4] == VoxelColor::BLACK || curr_colors[4] == VoxelColor::WHITE);
+            curr_runs[4]++;
+          } else {
+            cout << "Curr color: " << curr_colors[4] << endl;
+            cout << "Actual color: " << voxels[z*size_ + x].color << endl;
+            cout << "Run length: " << curr_runs[4] << endl;
+            
+            // Adjacent Black and white!
+            assert(false);
+          }
+        }
+      }
+    }
+
+    if (y == (int) size_-1) {
+      bits_to_write = std::bitset<16>(curr_runs[4]);
+      runs_to_write.push_back(bits_to_write);
+    } 
+
+    uint size_of_memblock = runs_to_write.size();
+    char16_t* memblock = new char16_t[size_of_memblock];
+    int i = 0;
+    for (bitset<16> b : runs_to_write) {
+      memblock[i++] = static_cast<char16_t>(b.to_ulong());
+    }
+    bin_file.write((char*) memblock, size_of_memblock * sizeof(*memblock));
+    delete[] memblock;
+  } else {
+    std::cout << "Unable to open file." << std::endl;
+    assert(false);
+  }
+}
+
 
 
 void Grid::calculateStatistics(std::vector<Voxel> &voxels, int y) {

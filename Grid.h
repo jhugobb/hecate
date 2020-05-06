@@ -129,6 +129,8 @@ class Grid {
     void saveSliceAsHEC_RLE_Naive_16b(std::vector<Voxel> &voxels, std::ofstream &bin_file, int y);
 
     void saveSliceAsHEC_RLE_Alt_8b(std::vector<Voxel> &voxels, std::ofstream &bin_file, int y);
+    
+    void saveSliceAsHEC_RLE_Alt_16b(std::vector<Voxel> &voxels, std::ofstream &bin_file, int y);
 
     void calculateStatistics(std::vector<Voxel> &voxels, int y);
 

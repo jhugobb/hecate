@@ -211,7 +211,7 @@ void Scene::render_gui()
 		}
 
 		clock_gettime(CLOCK_REALTIME, &end_grid);
-		std::cout << "Finished Two D Grid in " << end_grid.tv_sec - begin.tv_sec << " s." << std::endl;
+		std::cout << "Finished Two D Grid in " << end_grid.tv_sec - begin.tv_sec + ((end_grid.tv_nsec - begin.tv_nsec) / 1E9) << " s." << std::endl;
 		/* =================== 2D Grid =================== */
 		
 
@@ -232,15 +232,12 @@ void Scene::render_gui()
 				clock_gettime(CLOCK_REALTIME, &begin_bt);
 				twodgrid->buildBinTrees();
 				clock_gettime(CLOCK_REALTIME, &end_bt);
-				std::cout << "Finished Bin Tree Creation in " << end_bt.tv_sec - begin_bt.tv_sec << " s." << std::endl;
+				std::cout << "Finished Bin Tree Creation in " << end_bt.tv_sec - begin_bt.tv_sec + ((end_bt.tv_nsec - begin.tv_nsec) / 1E9)<< " s." << std::endl;
 				config.useNaive = false;
 				config.useBox = false;
 				break;
 		}
 		Grid grid(config.grid_size, model_bbox);
-
-		// cout << "Model bbox min: " << model_bbox.minPoint.x << " " << model_bbox.minPoint.y << " " << model_bbox.minPoint.z << endl; 
-		// cout << "Model bbox max: " << model_bbox.maxPoint.x << " " << model_bbox.maxPoint.y << " " << model_bbox.maxPoint.z << endl; 
 
 		// VOXELIZATION
 		clock_gettime(CLOCK_REALTIME, &begin_vox);
@@ -249,96 +246,14 @@ void Scene::render_gui()
 
 		clock_gettime(CLOCK_REALTIME, &end_vox);
 
-		std::cout << "Finished Voxelization in " << end_vox.tv_sec - begin_vox.tv_sec << " s." << std::endl;
+		std::cout << "Finished Voxelization in " << end_vox.tv_sec - begin_vox.tv_sec + ((end_vox.tv_nsec - begin_vox.tv_nsec) / 1E9)<< " s." << std::endl;
 		delete twodgrid;
 		/* =================== Voxelization =================== */
 
 		clock_gettime(CLOCK_REALTIME, &end);
 		
-		std::cout << "Finished execution in " << end.tv_sec - begin.tv_sec << " s." << std::endl;
+		std::cout << "Finished execution in " << end.tv_sec - begin.tv_sec + ((end.tv_nsec - begin.tv_nsec) / 1E9)<< " s." << std::endl;
 	}
-
-	// ImGui::Text("#Iterations: ");
-	// ImGui::SameLine();
-	// ImGui::SetNextItemWidth(75);
-	// ImGui::InputInt("##Iterations", &nIterations, 1, 10);
-	// nIterations = glm::max(1, glm::min(nIterations, 100));
-	// ImGui::Spacing();
-	// ImGui::RadioButton("Laplacian", &selectedIterativeFunction, 0); ImGui::SameLine();
-	// ImGui::RadioButton("Bilaplacian", &selectedIterativeFunction, 1); ImGui::SameLine();
-	// ImGui::RadioButton("Lambda-Nu", &selectedIterativeFunction, 2);
-	// ImGui::Spacing();
-	// if(ImGui::Button("Apply"))
-	// {
-	// 	LaplacianSmoothing smoothing;
-		
-	// 	smoothing.setMesh(mesh);
-	// 	switch(selectedIterativeFunction)
-	// 	{
-	// 	case 0:
-	// 		smoothing.iterativeLaplacian(nIterations, lambda);
-	// 		break;
-	// 	case 1:
-	// 		smoothing.iterativeBilaplacian(nIterations, lambda);
-	// 		break;
-	// 	case 2:
-	// 		smoothing.iterativeLambdaNu(nIterations, lambda);
-	// 		break;
-	// 	}
-	// 	mesh->sendToOpenGL(pointsProgram);
-	// }
-	// ImGui::Spacing();
-	// ImGui::Separator();
-	// ImGui::Spacing();
-
-	// // Global smoothing
-	// ImGui::Text("Global Smoothing");
-	// ImGui::Spacing();
-
-	// ImGui::Text("Constraints: ");
-	// ImGui::SameLine();
-	// ImGui::SetNextItemWidth(110);
-	// ImGui::InputInt("##Percentage", &percentConstraints, 1, 10);
-	// percentConstraints = glm::max(1, glm::min(percentConstraints, 100));
-	// ImGui::Spacing();
-
-	// ImGui::Text("Weight: ");
-	// ImGui::SameLine();
-	// ImGui::SetNextItemWidth(110);
-	// ImGui::InputFloat("##Weight", &constraintWeight, 0.01f, 0.1f, "%.2f");
-	// constraintWeight = glm::max(0.f, glm::min(constraintWeight, 1.f));
-	// ImGui::Spacing();
-
-	// ImGui::RadioButton("Laplacian##2", &selectedGlobalFunction, 0); ImGui::SameLine();
-	// ImGui::RadioButton("Bilaplacian##2", &selectedGlobalFunction, 1);
-	// ImGui::Spacing();
-	// if(ImGui::Button("Apply##2"))
-	// {
-	// 	vector<unsigned int> selected;
-	// 	vector<bool> constraints;
-	// 	LaplacianSmoothing smoothing;
-		
-	// 	srand(time(NULL));
-	// 	selected.resize(mesh->getVertices().size());
-	// 	for(unsigned int i=0; i<mesh->getVertices().size(); i++)
-	// 		selected[i] = i;
-	// 	random_shuffle(selected.begin(), selected.end());
-	// 	selected.resize(selected.size() * percentConstraints / 100);
-	// 	constraints.resize(mesh->getVertices().size(), false);
-	// 	for(unsigned int i=0; i<selected.size(); i++)
-	// 		constraints[selected[i]] = true;
-	// 	smoothing.setMesh(mesh);
-	// 	switch(selectedGlobalFunction)
-	// 	{
-	// 	case 0:
-	// 		smoothing.globalLaplacian(constraints);
-	// 		break;
-	// 	case 1:
-	// 		smoothing.globalBilaplacian(constraints, constraintWeight);
-	// 		break;
-	// 	}
-	// 	mesh->sendToOpenGL(pointsProgram);
-	// }
 
 	ImGui::End();
 }

@@ -5,7 +5,7 @@ cmake_policy(SET CMP0015 NEW)
 set (CMAKE_CXX_STANDARD 11)
 
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
+  set(CMAKE_BUILD_TYPE Debug)
 endif()
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall")
