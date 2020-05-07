@@ -62,10 +62,6 @@ void Grid::testVoxelGray_Box(int z,
     int tri_idx = candidates[i];
     Triangle* tri = triangles[tri_idx];
 
-    glm::vec3 v1 = vertices[tri->getV1()];
-    glm::vec3 v2 = vertices[tri->getV2()];
-    glm::vec3 v3 = vertices[tri->getV3()];
-
     // Save Bbox of triangle
     glm::vec3 min_box_tri = tri->tri_bbox.minPoint;
     glm::vec3 max_box_tri = tri->tri_bbox.maxPoint;
@@ -87,6 +83,9 @@ void Grid::testVoxelGray_Box(int z,
 
       if (Geo::testBoxTriangle(mesh_, triangles[tri_idx], min_box, max_box)) {
         voxels[z * size_ + x].color = VoxelColor::GRAY;
+        glm::vec3 v1 = vertices[tri->v1];
+        glm::vec3 v2 = vertices[tri->v2];
+        glm::vec3 v3 = vertices[tri->v3];
         voxels[z * size_ + x].normal = glm::normalize(glm::cross(v3-v2, v3-v1));
       }
     }
@@ -133,9 +132,9 @@ void Grid::calculateBlackWhite(int z,
   for (int tri_idx : quad_node->members) {
     glm::vec3 v1, v2, v3;
     Triangle* t = triangles[tri_idx];
-    v1 = vertices[t->getV1()];
-    v2 = vertices[t->getV2()];
-    v3 = vertices[t->getV3()];
+    v1 = vertices[t->v1];
+    v2 = vertices[t->v2];
+    v3 = vertices[t->v3];
     glm::vec3 rayDirection = glm::vec3(1,0,0);
 
     // Keep changing rays until all are valid
@@ -278,9 +277,9 @@ void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration con
               if (config.writePLY) {
                 glm::vec3 normal;
                 Triangle* t = triangles[representative];
-                glm::vec3 v1 = vertices[t->getV1()];
-                glm::vec3 v2 = vertices[t->getV2()];
-                glm::vec3 v3 = vertices[t->getV3()];
+                glm::vec3 v1 = vertices[t->v1];
+                glm::vec3 v2 = vertices[t->v2];
+                glm::vec3 v3 = vertices[t->v3];
 
                 normal = glm::normalize(glm::cross(v3-v2, v3-v1));
                 v.normal = normal;

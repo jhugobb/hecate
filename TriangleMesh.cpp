@@ -105,11 +105,11 @@ void TriangleMesh::sendToOpenGL(ShaderProgram &program)
 	
 	for(unsigned int i=0; i<triangles.size(); i++)
 	{
-		glVertices->push_back(vertices[triangles[i]->getV1()]);
-		glVertices->push_back(vertices[triangles[i]->getV2()]);
-		glVertices->push_back(vertices[triangles[i]->getV3()]);
+		glVertices->push_back(vertices[triangles[i]->v1]);
+		glVertices->push_back(vertices[triangles[i]->v2]);
+		glVertices->push_back(vertices[triangles[i]->v3]);
 		
-		normal = glm::cross(vertices[triangles[i]->getV2()] - vertices[triangles[i]->getV1()], vertices[triangles[i]->getV3()] - vertices[triangles[i]->getV1()]);
+		normal = glm::cross(vertices[triangles[i]->v2] - vertices[triangles[i]->v1], vertices[triangles[i]->v3] - vertices[triangles[i]->v1]);
 		normal = glm::normalize(normal);
 		
 		glNormals->push_back(normal);

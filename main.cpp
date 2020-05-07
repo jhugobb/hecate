@@ -1,4 +1,5 @@
 #include <iostream>
+#include <omp.h>
 #include "GL/gl3w.h"
 #include <GL/freeglut.h>
 #include "imgui/imgui.h"
@@ -141,6 +142,8 @@ static void idleCallback()
 
 int main(int argc, char **argv)
 {
+
+	omp_set_num_threads(8);
 	// GLUT initialization
 	glutInit(&argc, argv);
 	glutInitContextVersion(3,3);

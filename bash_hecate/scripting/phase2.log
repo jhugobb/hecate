@@ -2,749 +2,299 @@
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/screw_simplified_new_512normal.7z
---
-Path = output/screw_simplified_new_512normal.7z
-Type = 7z
-Physical Size = 203692
-Headers Size = 186
-Method = LZMA2:24
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 33554432 bytes (32 MiB)
+1 file, 13871902 bytes (14 MiB)
 
-Updating archive: output/screw_simplified_new_512normal.7z
+Creating archive: output/gear_new_1024rle_a_16.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 203692 bytes (199 KiB)
+Archive size: 1901098 bytes (1857 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/screw_simplified_new_126rle_n_8.7z
---
-Path = output/screw_simplified_new_126rle_n_8.7z
-Type = 7z
-Physical Size = 7234
-Headers Size = 194
-Method = LZMA2:48k
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 43691 bytes (43 KiB)
+1 file, 17548327 bytes (17 MiB)
 
-Updating archive: output/screw_simplified_new_126rle_n_8.7z
+Creating archive: output/screw_simplified_new_1024rle_n_8.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 7234 bytes (8 KiB)
+Archive size: 514907 bytes (503 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/screw_simplified_new_126normal.7z
---
-Path = output/screw_simplified_new_126normal.7z
-Type = 7z
-Physical Size = 9810
-Headers Size = 186
-Method = LZMA2:19
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 500094 bytes (489 KiB)
+1 file, 268435456 bytes (256 MiB)
 
-Updating archive: output/screw_simplified_new_126normal.7z
+Creating archive: output/screw_simplified_new_1024normal.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 9810 bytes (10 KiB)
+Archive size: 921989 bytes (901 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/chinese_coin_simplified_new_126rle_n_16.7z
---
-Path = output/chinese_coin_simplified_new_126rle_n_16.7z
-Type = 7z
-Physical Size = 5925
-Headers Size = 210
-Method = LZMA2:24k
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 17944 bytes (18 KiB)
+1 file, 18878275 bytes (19 MiB)
 
-Updating archive: output/chinese_coin_simplified_new_126rle_n_16.7z
+Creating archive: output/electrical_outlet_simplified_new_1024rle_n_8.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 5925 bytes (6 KiB)
+Archive size: 602077 bytes (588 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/chinese_coin_simplified_new_256rle_a_8.7z
---
-Path = output/chinese_coin_simplified_new_256rle_a_8.7z
-Type = 7z
-Physical Size = 32435
-Headers Size = 202
-Method = LZMA2:18
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 220260 bytes (216 KiB)
+1 file, 17502919 bytes (17 MiB)
 
-Updating archive: output/chinese_coin_simplified_new_256rle_a_8.7z
+Creating archive: output/connector_new_1024rle_n_8.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 32435 bytes (32 KiB)
+Archive size: 224631 bytes (220 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/chinese_coin_simplified_new_126rle_a_16.7z
---
-Path = output/chinese_coin_simplified_new_126rle_a_16.7z
-Type = 7z
-Physical Size = 8155
-Headers Size = 210
-Method = LZMA2:96k
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 75136 bytes (74 KiB)
+1 file, 5434662 bytes (5308 KiB)
 
-Updating archive: output/chinese_coin_simplified_new_126rle_a_16.7z
+Creating archive: output/connector_new_1024rle_a_8.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 8155 bytes (8 KiB)
+Archive size: 230772 bytes (226 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/screw_simplified_new_512rle_n_8.7z
---
-Path = output/screw_simplified_new_512rle_n_8.7z
-Type = 7z
-Physical Size = 126139
-Headers Size = 194
-Method = LZMA2:3m
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 2292894 bytes (2240 KiB)
+1 file, 6856670 bytes (6696 KiB)
 
-Updating archive: output/screw_simplified_new_512rle_n_8.7z
+Creating archive: output/gear_new_1024rle_n_16.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 126139 bytes (124 KiB)
+Archive size: 1207167 bytes (1179 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/screw_simplified_new_256rle_n_8.7z
---
-Path = output/screw_simplified_new_256rle_n_8.7z
-Type = 7z
-Physical Size = 29991
-Headers Size = 194
-Method = LZMA2:384k
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 311301 bytes (305 KiB)
+1 file, 2092256 bytes (2044 KiB)
 
-Updating archive: output/screw_simplified_new_256rle_n_8.7z
+Creating archive: output/connector_new_1024rle_n_16.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 29991 bytes (30 KiB)
+Archive size: 167209 bytes (164 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/screw_simplified_new_126rle_n_16.7z
---
-Path = output/screw_simplified_new_126rle_n_16.7z
-Type = 7z
-Physical Size = 6659
-Headers Size = 194
-Method = LZMA2:48k
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 33428 bytes (33 KiB)
+1 file, 11342728 bytes (11 MiB)
 
-Updating archive: output/screw_simplified_new_126rle_n_16.7z
+Creating archive: output/electrical_outlet_simplified_new_1024rle_a_16.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 6659 bytes (7 KiB)
+Archive size: 792608 bytes (775 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/chinese_coin_simplified_new_256rle_a_16.7z
---
-Path = output/chinese_coin_simplified_new_256rle_a_16.7z
-Type = 7z
-Physical Size = 34138
-Headers Size = 210
-Method = LZMA2:384k
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 320896 bytes (314 KiB)
+1 file, 2822970 bytes (2757 KiB)
 
-Updating archive: output/chinese_coin_simplified_new_256rle_a_16.7z
+Creating archive: output/connector_new_1024rle_a_16.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 34138 bytes (34 KiB)
+Archive size: 244605 bytes (239 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/screw_simplified_new_256rle_a_16.7z
---
-Path = output/screw_simplified_new_256rle_a_16.7z
-Type = 7z
-Physical Size = 34117
-Headers Size = 194
-Method = LZMA2:384k
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 326524 bytes (319 KiB)
+1 file, 5775780 bytes (5641 KiB)
 
-Updating archive: output/screw_simplified_new_256rle_a_16.7z
+Creating archive: output/electrical_outlet_simplified_new_1024rle_n_16.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 34117 bytes (34 KiB)
+Archive size: 469091 bytes (459 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/chinese_coin_simplified_new_256rle_n_8.7z
---
-Path = output/chinese_coin_simplified_new_256rle_n_8.7z
-Type = 7z
-Physical Size = 26726
-Headers Size = 202
-Method = LZMA2:384k
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 291378 bytes (285 KiB)
+1 file, 19249619 bytes (19 MiB)
 
-Updating archive: output/chinese_coin_simplified_new_256rle_n_8.7z
+Creating archive: output/gear_new_1024rle_n_8.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 26726 bytes (27 KiB)
+Archive size: 1650295 bytes (1612 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/chinese_coin_simplified_new_512rle_a_8.7z
---
-Path = output/chinese_coin_simplified_new_512rle_a_8.7z
-Type = 7z
-Physical Size = 134764
-Headers Size = 202
-Method = LZMA2:1536k
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 1179998 bytes (1153 KiB)
+1 file, 10485532 bytes (10240 KiB)
 
-Updating archive: output/chinese_coin_simplified_new_512rle_a_8.7z
+Creating archive: output/gear_new_1024rle_a_8.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 134764 bytes (132 KiB)
+Archive size: 1837242 bytes (1795 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/screw_simplified_new_126rle_a_16.7z
---
-Path = output/screw_simplified_new_126rle_a_16.7z
-Type = 7z
-Physical Size = 8248
-Headers Size = 194
-Method = LZMA2:96k
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 71988 bytes (71 KiB)
+1 file, 268435456 bytes (256 MiB)
 
-Updating archive: output/screw_simplified_new_126rle_a_16.7z
+Creating archive: output/gear_new_1024normal.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 8248 bytes (9 KiB)
+Archive size: 2820400 bytes (2755 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/chinese_coin_simplified_new_256normal.7z
---
-Path = output/chinese_coin_simplified_new_256normal.7z
-Type = 7z
-Physical Size = 35550
-Headers Size = 202
-Method = LZMA2:22
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 4194304 bytes (4096 KiB)
+1 file, 268435456 bytes (256 MiB)
 
-Updating archive: output/chinese_coin_simplified_new_256normal.7z
+Creating archive: output/electrical_outlet_simplified_new_1024normal.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 35550 bytes (35 KiB)
+Archive size: 904337 bytes (884 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/screw_simplified_new_126rle_a_8.7z
---
-Path = output/screw_simplified_new_126rle_a_8.7z
-Type = 7z
-Physical Size = 8134
-Headers Size = 194
-Method = LZMA2:48k
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 41654 bytes (41 KiB)
+1 file, 268435456 bytes (256 MiB)
 
-Updating archive: output/screw_simplified_new_126rle_a_8.7z
+Creating archive: output/connector_new_1024normal.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 8134 bytes (8 KiB)
+Archive size: 362682 bytes (355 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/screw_simplified_new_512rle_a_8.7z
---
-Path = output/screw_simplified_new_512rle_a_8.7z
-Type = 7z
-Physical Size = 137960
-Headers Size = 194
-Method = LZMA2:1536k
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 1220882 bytes (1193 KiB)
+1 file, 2310754 bytes (2257 KiB)
 
-Updating archive: output/screw_simplified_new_512rle_a_8.7z
+Creating archive: output/screw_simplified_new_1024rle_n_16.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 137960 bytes (135 KiB)
+Archive size: 358431 bytes (351 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/screw_simplified_new_256normal.7z
---
-Path = output/screw_simplified_new_256normal.7z
-Type = 7z
-Physical Size = 44253
-Headers Size = 186
-Method = LZMA2:22
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 4194304 bytes (4096 KiB)
+1 file, 9439919 bytes (9219 KiB)
 
-Updating archive: output/screw_simplified_new_256normal.7z
+Creating archive: output/electrical_outlet_simplified_new_1024rle_a_8.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 44253 bytes (44 KiB)
+Archive size: 713205 bytes (697 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/chinese_coin_simplified_new_126normal.7z
---
-Path = output/chinese_coin_simplified_new_126normal.7z
-Type = 7z
-Physical Size = 7261
-Headers Size = 202
-Method = LZMA2:19
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 500094 bytes (489 KiB)
+1 file, 7913036 bytes (7728 KiB)
 
-Updating archive: output/chinese_coin_simplified_new_126normal.7z
+Creating archive: output/screw_simplified_new_1024rle_a_16.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 7261 bytes (8 KiB)
+Archive size: 646781 bytes (632 KiB)
 Everything is Ok
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
 p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
 
-Open archive: output/screw_simplified_new_256rle_a_8.7z
---
-Path = output/screw_simplified_new_256rle_a_8.7z
-Type = 7z
-Physical Size = 33320
-Headers Size = 194
-Method = LZMA2:18
-Solid = -
-Blocks = 1
-
 Scanning the drive:
-1 file, 211571 bytes (207 KiB)
+1 file, 7893915 bytes (7709 KiB)
 
-Updating archive: output/screw_simplified_new_256rle_a_8.7z
+Creating archive: output/screw_simplified_new_1024rle_a_8.7z
 
 Items to compress: 1
 
 
 Files read from disk: 1
-Archive size: 33320 bytes (33 KiB)
-Everything is Ok
-
-7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
-p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
-
-Open archive: output/chinese_coin_simplified_new_512rle_n_8.7z
---
-Path = output/chinese_coin_simplified_new_512rle_n_8.7z
-Type = 7z
-Physical Size = 109437
-Headers Size = 202
-Method = LZMA2:3m
-Solid = -
-Blocks = 1
-
-Scanning the drive:
-1 file, 2211445 bytes (2160 KiB)
-
-Updating archive: output/chinese_coin_simplified_new_512rle_n_8.7z
-
-Items to compress: 1
-
-
-Files read from disk: 1
-Archive size: 109437 bytes (107 KiB)
-Everything is Ok
-
-7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
-p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
-
-Open archive: output/chinese_coin_simplified_new_512rle_n_16.7z
---
-Path = output/chinese_coin_simplified_new_512rle_n_16.7z
-Type = 7z
-Physical Size = 85439
-Headers Size = 210
-Method = LZMA2:384k
-Solid = -
-Blocks = 1
-
-Scanning the drive:
-1 file, 331402 bytes (324 KiB)
-
-Updating archive: output/chinese_coin_simplified_new_512rle_n_16.7z
-
-Items to compress: 1
-
-
-Files read from disk: 1
-Archive size: 85439 bytes (84 KiB)
-Everything is Ok
-
-7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
-p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
-
-Open archive: output/screw_simplified_new_256rle_n_16.7z
---
-Path = output/screw_simplified_new_256rle_n_16.7z
-Type = 7z
-Physical Size = 25734
-Headers Size = 194
-Method = LZMA2:192k
-Solid = -
-Blocks = 1
-
-Scanning the drive:
-1 file, 139358 bytes (137 KiB)
-
-Updating archive: output/screw_simplified_new_256rle_n_16.7z
-
-Items to compress: 1
-
-
-Files read from disk: 1
-Archive size: 25734 bytes (26 KiB)
-Everything is Ok
-
-7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
-p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
-
-Open archive: output/chinese_coin_simplified_new_512rle_a_16.7z
---
-Path = output/chinese_coin_simplified_new_512rle_a_16.7z
-Type = 7z
-Physical Size = 147985
-Headers Size = 210
-Method = LZMA2:1536k
-Solid = -
-Blocks = 1
-
-Scanning the drive:
-1 file, 1359950 bytes (1329 KiB)
-
-Updating archive: output/chinese_coin_simplified_new_512rle_a_16.7z
-
-Items to compress: 1
-
-
-Files read from disk: 1
-Archive size: 147985 bytes (145 KiB)
-Everything is Ok
-
-7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
-p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
-
-Open archive: output/screw_simplified_new_512rle_n_16.7z
---
-Path = output/screw_simplified_new_512rle_n_16.7z
-Type = 7z
-Physical Size = 99654
-Headers Size = 194
-Method = LZMA2:768k
-Solid = -
-Blocks = 1
-
-Scanning the drive:
-1 file, 564858 bytes (552 KiB)
-
-Updating archive: output/screw_simplified_new_512rle_n_16.7z
-
-Items to compress: 1
-
-
-Files read from disk: 1
-Archive size: 99654 bytes (98 KiB)
-Everything is Ok
-
-7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
-p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
-
-Open archive: output/chinese_coin_simplified_new_512normal.7z
---
-Path = output/chinese_coin_simplified_new_512normal.7z
-Type = 7z
-Physical Size = 158095
-Headers Size = 202
-Method = LZMA2:24
-Solid = -
-Blocks = 1
-
-Scanning the drive:
-1 file, 33554432 bytes (32 MiB)
-
-Updating archive: output/chinese_coin_simplified_new_512normal.7z
-
-Items to compress: 1
-
-
-Files read from disk: 1
-Archive size: 158095 bytes (155 KiB)
-Everything is Ok
-
-7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
-p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
-
-Open archive: output/chinese_coin_simplified_new_126rle_n_8.7z
---
-Path = output/chinese_coin_simplified_new_126rle_n_8.7z
-Type = 7z
-Physical Size = 6484
-Headers Size = 202
-Method = LZMA2:48k
-Solid = -
-Blocks = 1
-
-Scanning the drive:
-1 file, 38271 bytes (38 KiB)
-
-Updating archive: output/chinese_coin_simplified_new_126rle_n_8.7z
-
-Items to compress: 1
-
-
-Files read from disk: 1
-Archive size: 6484 bytes (7 KiB)
-Everything is Ok
-
-7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
-p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
-
-Open archive: output/screw_simplified_new_512rle_a_16.7z
---
-Path = output/screw_simplified_new_512rle_a_16.7z
-Type = 7z
-Physical Size = 147739
-Headers Size = 194
-Method = LZMA2:1536k
-Solid = -
-Blocks = 1
-
-Scanning the drive:
-1 file, 1528132 bytes (1493 KiB)
-
-Updating archive: output/screw_simplified_new_512rle_a_16.7z
-
-Items to compress: 1
-
-
-Files read from disk: 1
-Archive size: 147739 bytes (145 KiB)
-Everything is Ok
-
-7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
-p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
-
-Open archive: output/chinese_coin_simplified_new_126rle_a_8.7z
---
-Path = output/chinese_coin_simplified_new_126rle_a_8.7z
-Type = 7z
-Physical Size = 7816
-Headers Size = 202
-Method = LZMA2:48k
-Solid = -
-Blocks = 1
-
-Scanning the drive:
-1 file, 44646 bytes (44 KiB)
-
-Updating archive: output/chinese_coin_simplified_new_126rle_a_8.7z
-
-Items to compress: 1
-
-
-Files read from disk: 1
-Archive size: 7816 bytes (8 KiB)
-Everything is Ok
-
-7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
-p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,12 CPUs Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz (906EA),ASM,AES-NI)
-
-Open archive: output/chinese_coin_simplified_new_256rle_n_16.7z
---
-Path = output/chinese_coin_simplified_new_256rle_n_16.7z
-Type = 7z
-Physical Size = 22679
-Headers Size = 210
-Method = LZMA2:96k
-Solid = -
-Blocks = 1
-
-Scanning the drive:
-1 file, 79310 bytes (78 KiB)
-
-Updating archive: output/chinese_coin_simplified_new_256rle_n_16.7z
-
-Items to compress: 1
-
-
-Files read from disk: 1
-Archive size: 22679 bytes (23 KiB)
+Archive size: 570957 bytes (558 KiB)
 Everything is Ok

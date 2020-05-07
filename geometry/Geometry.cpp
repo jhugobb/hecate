@@ -74,11 +74,11 @@ bool testQuadTriangle(TriangleMesh* mesh, Triangle *t, glm::vec2 &min_point, glm
   box.addPoint(max_point_3d);
 
   glm::vec3 v1o, v2o, v3o;
-  std::vector<glm::vec3> vertices = mesh->getVertices();
+  std::vector<glm::vec3> &vertices = mesh->getVertices();
   
-  v1o = vertices[t->getV1()];
-  v2o = vertices[t->getV2()];
-  v3o = vertices[t->getV3()];
+  v1o = vertices[t->v1];
+  v2o = vertices[t->v2];
+  v3o = vertices[t->v3];
 
   const glm::vec3 center_box = (box.minPoint + box.maxPoint) / 2.0f;
 
@@ -130,11 +130,11 @@ bool testBoxTriangle(TriangleMesh* mesh, Triangle *t, glm::vec3 &min_point, glm:
   box.addPoint(max_point);
 
   glm::vec3 v1o, v2o, v3o;
-  std::vector<glm::vec3> vertices = mesh->getVertices();
+  std::vector<glm::vec3> &vertices = mesh->getVertices();
   
-  v1o = vertices[t->getV1()];
-  v2o = vertices[t->getV2()];
-  v3o = vertices[t->getV3()];
+  v1o = vertices[t->v1];
+  v2o = vertices[t->v2];
+  v3o = vertices[t->v3];
 
 
   const glm::vec3 center_box = (box.minPoint + box.maxPoint) / 2.0f;

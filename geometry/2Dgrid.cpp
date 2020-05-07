@@ -115,7 +115,7 @@ void node::build_bin_tree(TriangleMesh* mesh, Geo::BBox space, double min_node_s
   std::list<BinTreeNode*> result;
   std::list<BinTreeNode*>::iterator it;
 
-  std::vector<Triangle*> triangles = mesh->getTriangles();
+  std::vector<Triangle*> &triangles = mesh->getTriangles();
   std::map<Triangle, int> reference;
 
   BinTreeNode* btn = new BinTreeNode();
