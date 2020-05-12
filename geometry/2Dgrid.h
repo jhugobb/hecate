@@ -53,7 +53,6 @@ class node {
 class TwoDGrid {
 
   public:
-    TwoDGrid();
     TwoDGrid(TriangleMesh* mesh, int size, Geo::BBox space);
     ~TwoDGrid();
 
@@ -85,7 +84,7 @@ class TwoDGrid {
     TriangleMesh* m;
 
     // Triangles of the mesh
-    std::vector<Triangle*> triangles;
+    const std::vector<Triangle*> &triangles;
 
     // Number of nodes in a dimension
     int num_nodes;

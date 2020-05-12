@@ -38,14 +38,12 @@ class Grid {
   };
 
   public:
-    Grid() {};
-    Grid(unsigned int size, Geo::BBox space_);
+    Grid(unsigned int size, Geo::BBox space_, TriangleMesh* m_);
     ~Grid() {}; // TODO
     
     /**
      * Voxelizes the model
      *
-     * @param mesh Triangle Mesh of the model to be voxelized
      * @param qt 2Dgrid of the model that subdivided the space
      * @param useNaive boolean that dictates if the naive approach should be used
      * @param useBox
@@ -53,7 +51,7 @@ class Grid {
      * @param threshold_raycasting
      * @param filename name of the file where to save the voxelization
      */ 
-    void colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration config, std::string filename);
+    void colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string filename);
 
 
     /**
@@ -72,12 +70,15 @@ class Grid {
 
     // Bounding Box of the model
     Geo::BBox space;
+    
+    // Pointer to the triangle mesh
+    TriangleMesh* mesh_;
 
     // Triangles of the mesh_
-    std::vector<Triangle*> triangles;
+    const std::vector<Triangle*> &triangles;
 
     // Vertices of the mesh_
-    std::vector<glm::vec3> vertices;
+    const std::vector<glm::vec3> &vertices;
 
     // Resolution of the voxelization to be written as a header for HEC
     char16_t resolution_bits;
@@ -88,7 +89,6 @@ class Grid {
     // Vector of voxels
     std::vector<Voxel> elements;
 
-    TriangleMesh* mesh_;
 
     std::vector<uint> white_runs;
     std::vector<uint> black_runs;

@@ -3,9 +3,7 @@
 #include <iostream>
 #include <map>
 
-TwoDGrid::TwoDGrid() {}
-
-TwoDGrid::TwoDGrid(TriangleMesh* m_, int size, Geo::BBox space_) {
+TwoDGrid::TwoDGrid(TriangleMesh* m_, int size, Geo::BBox space_) : triangles(m_->getTriangles()){
   glm::vec3 center_box = (space_.maxPoint + space_.minPoint)/2.0f;
   glm::vec3 size_box = space_.maxPoint - space_.minPoint;
   // Make the cells cubic
@@ -31,7 +29,6 @@ TwoDGrid::TwoDGrid(TriangleMesh* m_, int size, Geo::BBox space_) {
     }
   }
 
-  triangles = m->getTriangles();
 }
 
 TwoDGrid::~TwoDGrid() {

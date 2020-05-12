@@ -28,7 +28,9 @@ std::string string_format( const std::string& format, Args ... args )
     return string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
 }
 
-Grid::Grid(unsigned int size, Geo::BBox space_) {
+Grid::Grid(unsigned int size, Geo::BBox space_, TriangleMesh* m_) : mesh_(m_),
+                                                                    triangles(m_->getTriangles()), 
+                                                                    vertices(m_->getVertices()) {
   size_ = size;
   space = space_;
 
@@ -165,12 +167,9 @@ void Grid::calculateBlackWhite(int z,
   }
 }
 
-void Grid::colorGrid(TriangleMesh* mesh, TwoDGrid* qt, ColoringConfiguration config, std::string filename) {
+void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string filename) {
   // std::vector<Triangle*> triangles = mesh->getTriangles();
   // std::vector<glm::vec3> vertices = mesh->getVertices();
-  mesh_ = mesh;
-  triangles = mesh_->getTriangles();
-  vertices = mesh_->getVertices();
   // For PLY writing
   std::ofstream out_fobj;
   std::streampos file_verts_line;

@@ -237,12 +237,12 @@ void Scene::render_gui()
 				config.useBox = false;
 				break;
 		}
-		Grid grid(config.grid_size, model_bbox);
+		Grid grid(config.grid_size, model_bbox, mesh);
 
 		// VOXELIZATION
 		clock_gettime(CLOCK_REALTIME, &begin_vox);
 		
-		grid.colorGrid(mesh, twodgrid, config, config.filename);
+		grid.colorGrid(twodgrid, config, config.filename);
 
 		clock_gettime(CLOCK_REALTIME, &end_vox);
 
