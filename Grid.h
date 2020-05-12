@@ -78,9 +78,14 @@ class Grid {
 
     // Vertices of the mesh_
     std::vector<glm::vec3> vertices;
-    
+
+    // Resolution of the voxelization to be written as a header for HEC
+    char16_t resolution_bits;
+
+    // Prefix of the files to be created
+    std::string filename_;
+
     // Vector of voxels
-    // TODO change to only have a single row of voxels at any given point in time
     std::vector<Voxel> elements;
 
     TriangleMesh* mesh_;
@@ -92,18 +97,18 @@ class Grid {
     uint current_run = 0;
     VoxelColor current_run_color = VoxelColor::WHITE;
 
-    int curr_runs[6] = {0,0,0,0,0,0}; 
-    VoxelColor curr_colors[6] = {VoxelColor::WHITE,
-                                 VoxelColor::WHITE,
-                                 VoxelColor::WHITE,
-                                 VoxelColor::WHITE,
-                                 VoxelColor::WHITE,
-                                 VoxelColor::WHITE};
+    // int curr_runs[6] = {0,0,0,0,0,0}; 
+    // VoxelColor curr_colors[6] = {VoxelColor::WHITE,
+    //                              VoxelColor::WHITE,
+    //                              VoxelColor::WHITE,
+    //                              VoxelColor::WHITE,
+    //                              VoxelColor::WHITE,
+    //                              VoxelColor::WHITE};
                                  
-    bool needs_to_set_color[6] = {true,true,true,true,true,true};
+    // bool needs_to_set_color[6] = {true,true,true,true,true,true};
     // used for alt
-    int n_times_switched[2] = {0, 0}; 
-    bool wroteAll1s[2] = {false, false};
+    // int n_times_switched[2] = {0, 0}; 
+    // bool wroteAll1s[2] = {false, false};
 
     std::vector<Voxel> lastSlice;
     std::vector<double> similarPercents;
@@ -122,15 +127,15 @@ class Grid {
 
     void saveSliceAsPNG(std::vector<Voxel> &voxels, uint y);
 
-    void saveSliceAsHEC(std::vector<Voxel> &voxels, std::ofstream &bin_file);
+    void saveSliceAsHEC(std::vector<Voxel> &voxels, int y);
 
-    void saveSliceAsHEC_RLE_Naive_8b(std::vector<Voxel> &voxels, std::ofstream &bin_file, int y);
+    void saveSliceAsHEC_RLE_Naive_8b(std::vector<Voxel> &voxels, int y);
     
-    void saveSliceAsHEC_RLE_Naive_16b(std::vector<Voxel> &voxels, std::ofstream &bin_file, int y);
+    void saveSliceAsHEC_RLE_Naive_16b(std::vector<Voxel> &voxels, int y);
 
-    void saveSliceAsHEC_RLE_Alt_8b(std::vector<Voxel> &voxels, std::ofstream &bin_file, int y);
+    void saveSliceAsHEC_RLE_Alt_8b(std::vector<Voxel> &voxels, int y);
     
-    void saveSliceAsHEC_RLE_Alt_16b(std::vector<Voxel> &voxels, std::ofstream &bin_file, int y);
+    void saveSliceAsHEC_RLE_Alt_16b(std::vector<Voxel> &voxels, int y);
 
     void calculateStatistics(std::vector<Voxel> &voxels, int y);
 
