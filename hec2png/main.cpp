@@ -97,6 +97,8 @@ void readHEC_normal(char* filename, bool write_slices) {
   std::sort(paths.begin(), paths.end());
   bool already_have_resolution = false;
   int resolution = 0;
+  double max_time = std::numeric_limits<double>::lowest();
+  double sum_time = 0.0;
 
   for (uint path_idx = 0; path_idx < paths.size(); path_idx++) {
     path& entry = paths[path_idx];
@@ -133,9 +135,11 @@ void readHEC_normal(char* filename, bool write_slices) {
       }
 
       clock_gettime(CLOCK_REALTIME, &end);
-
+      double time = end.tv_sec - begin.tv_sec + ((end.tv_nsec - begin.tv_nsec) / 1E9);
+      sum_time += time;
+      if (max_time < time) max_time = time; 
       std::cout << "Decoded " << entry.stem().string() << " -> "
-                << end.tv_sec - begin.tv_sec + ((end.tv_nsec - begin.tv_nsec) / 1E9) << " s." << std::endl;
+                << time << " s." << std::endl;
 
       // std::cout << "voxels size:" << voxels.size() << endl;
       assert((int) voxels.size() == resolution*resolution);
@@ -146,7 +150,8 @@ void readHEC_normal(char* filename, bool write_slices) {
       delete[] memblock;
     } else std::cout << "Unable to open file";
   }
-  
+  std::cout << "Max time of slicing: " << max_time << " s." << endl;
+  std::cout << "Total time of slicing: " << sum_time << " s." << endl;
 }
 
 void readHEC_RLE_N_8(char* filename, bool write_slices) {
@@ -156,6 +161,8 @@ void readHEC_RLE_N_8(char* filename, bool write_slices) {
   std::sort(paths.begin(), paths.end());
   bool already_have_resolution = false;
   int resolution = 0;
+  double max_time = std::numeric_limits<double>::lowest();
+  double sum_time = 0.0;
 
   for (uint path_idx = 0; path_idx < paths.size(); path_idx++) {
     path& entry = paths[path_idx];
@@ -195,15 +202,17 @@ void readHEC_RLE_N_8(char* filename, bool write_slices) {
         count.push_back(bits.to_ulong()+1);
       }
       clock_gettime(CLOCK_REALTIME, &end);
-
+      double time = end.tv_sec - begin.tv_sec + ((end.tv_nsec - begin.tv_nsec) / 1E9);
+      sum_time += time;
+      if (max_time < time) max_time = time; 
       std::cout << "Decoded " << entry.stem().string() << " -> "
-                << end.tv_sec - begin.tv_sec + ((end.tv_nsec - begin.tv_nsec) / 1E9) << " s." << std::endl;
+                << time << " s." << std::endl;
 
       int sum = 0;
       for (int cou : count) {
         sum += cou;
       }
-      cout << "voxels size:" << sum << endl;
+      // cout << "voxels size:" << sum << endl;
       assert(sum == resolution*resolution);
 
       if (write_slices) {
@@ -212,6 +221,8 @@ void readHEC_RLE_N_8(char* filename, bool write_slices) {
       delete[] memblock;
     } else cout << "Unable to open file";
   }
+  std::cout << "Max time of slicing: " << max_time << " s." << endl;
+  std::cout << "Total time of slicing: " << sum_time << " s." << endl;
 }
 
 void readHEC_RLE_N_16(char* filename, bool write_slices) {
@@ -221,6 +232,8 @@ void readHEC_RLE_N_16(char* filename, bool write_slices) {
   std::sort(paths.begin(), paths.end());
   bool already_have_resolution = false;
   int resolution = 0;
+  double max_time = std::numeric_limits<double>::lowest();
+  double sum_time = 0.0;
 
   for (uint path_idx = 0; path_idx < paths.size(); path_idx++) {
     path& entry = paths[path_idx];
@@ -267,9 +280,11 @@ void readHEC_RLE_N_16(char* filename, bool write_slices) {
       }
 
       clock_gettime(CLOCK_REALTIME, &end);
-
+      double time = end.tv_sec - begin.tv_sec + ((end.tv_nsec - begin.tv_nsec) / 1E9);
+      sum_time += time;
+      if (max_time < time) max_time = time; 
       std::cout << "Decoded " << entry.stem().string() << " -> "
-                << end.tv_sec - begin.tv_sec + ((end.tv_nsec - begin.tv_nsec) / 1E9) << " s." << std::endl;
+                << time << " s." << std::endl;
       
       int sum = 0;
       for (int cou : count) {
@@ -285,6 +300,8 @@ void readHEC_RLE_N_16(char* filename, bool write_slices) {
       delete[] memblock;
     } else cout << "Unable to open file";
   }
+  std::cout << "Max time of slicing: " << max_time << " s." << endl;
+  std::cout << "Total time of slicing: " << sum_time << " s." << endl;
 }
 
 void readHEC_RLE_A_8(char* filename, bool write_slices) {
@@ -294,6 +311,8 @@ void readHEC_RLE_A_8(char* filename, bool write_slices) {
   std::sort(paths.begin(), paths.end());
   bool already_have_resolution = false;
   int resolution = 0;
+  double max_time = std::numeric_limits<double>::lowest();
+  double sum_time = 0.0;
 
   for (uint path_idx = 0; path_idx < paths.size(); path_idx++) {
     path& entry = paths[path_idx];
@@ -348,9 +367,11 @@ void readHEC_RLE_A_8(char* filename, bool write_slices) {
       }
 
       clock_gettime(CLOCK_REALTIME, &end);
-
+      double time = end.tv_sec - begin.tv_sec + ((end.tv_nsec - begin.tv_nsec) / 1E9);
+      sum_time += time;
+      if (max_time < time) max_time = time; 
       std::cout << "Decoded " << entry.stem().string() << " -> "
-                << end.tv_sec - begin.tv_sec + ((end.tv_nsec - begin.tv_nsec) / 1E9) << " s." << std::endl;
+                << time << " s." << std::endl;
 
       int sum = 0;
       for (int cou : count) {
@@ -368,6 +389,8 @@ void readHEC_RLE_A_8(char* filename, bool write_slices) {
       delete[] memblock;
     } else cout << "Unable to open file";
   }
+  std::cout << "Max time of slicing: " << max_time << " s." << endl;
+  std::cout << "Total time of slicing: " << sum_time << " s." << endl;
 }
 
 void readHEC_RLE_A_16(char* filename, bool write_slices) {
@@ -377,6 +400,8 @@ void readHEC_RLE_A_16(char* filename, bool write_slices) {
   std::sort(paths.begin(), paths.end());
   bool already_have_resolution = false;
   int resolution = 0;
+  double max_time = std::numeric_limits<double>::lowest();
+  double sum_time = 0.0;
 
   for (uint path_idx = 0; path_idx < paths.size(); path_idx++) {
     path& entry = paths[path_idx];
@@ -442,9 +467,11 @@ void readHEC_RLE_A_16(char* filename, bool write_slices) {
       }
 
       clock_gettime(CLOCK_REALTIME, &end);
-
+      double time = end.tv_sec - begin.tv_sec + ((end.tv_nsec - begin.tv_nsec) / 1E9);
+      sum_time += time;
+      if (max_time < time) max_time = time; 
       std::cout << "Decoded " << entry.stem().string() << " -> "
-                << end.tv_sec - begin.tv_sec + ((end.tv_nsec - begin.tv_nsec) / 1E9) << " s." << std::endl;
+                << time << " s." << std::endl;
 
       int sum = 0;
       for (int cou : count) {
@@ -463,6 +490,8 @@ void readHEC_RLE_A_16(char* filename, bool write_slices) {
       delete[] memblock;
     } else cout << "Unable to open file";
   }
+  std::cout << "Max time of slicing: " << max_time << " s." << endl;
+  std::cout << "Total time of slicing: " << sum_time << " s." << endl;
 }
 
 int main(int argc, char **argv) {

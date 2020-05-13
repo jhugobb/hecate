@@ -6,7 +6,7 @@ import yaml
 # ./run.py hecate_bash_path folder_with_models configfile
 def main():
   if len(sys.argv) != 3: 
-    print("Usage: ./run.py folder_with_models_hecs configfile")
+    print("Usage: ./run.py folder_with_dirs_hecs configfile")
     return -1
 
   args = sys.argv
@@ -25,25 +25,25 @@ def main():
   use_gzip = config["gzip"]
 
   for filename in os.listdir(folder):
-    if filename.endswith(".hec"):
-      print("Running " + filename)
+    # print ("I entered " + str(os.path.isdir(os.path.relpath(filename))))
+    if os.path.isdir(folder+"/"+filename):
+      for candidate_file in os.listdir(folder+"/"+filename):
+        if candidate_file.endswith(".hec"):
+          print("Running " + filename+"/"+candidate_file)
 
-        # cmd_str = hecate_bash + " " + os.path.relpath(folder+"/"+filename) + " " + str(grid_size) + " " + str(voxelization_tech) + " " + str(calc_BW*1) + " " + \
-        #           str(threshold_ray) + " " + str(writePNG*1) + " " + str(writePLY*1) + " " + str(writeCSV*1) + " " + str(writeHEC*1)
-        
-      if use_7z:
-        cmd_str = "7z a " + folder+"/"+filename[:-4] + ".7z " + os.path.relpath(folder+"/"+filename)
-        if subprocess.call(cmd_str,stdout=outputfile_stream, shell=True) != 0:
-          print("Error when running " + filename +"!")
-          exit(2)
-      
-      if use_gzip:
-        cmd_str = "gzip -ck " + os.path.relpath(folder+"/"+filename) + " > " + folder+"/"+filename[:-4] + ".gz " 
-        if subprocess.call(cmd_str,stdout=outputfile_stream, shell=True) != 0:
-          print("Error when running " + filename +"!")
-          exit(2)
-    else:
-      continue
+          if use_7z:
+            cmd_str = "7z a " + folder+"/"+filename+"/"+candidate_file[:-4] + ".7z " + os.path.relpath(folder+"/"+filename+"/"+candidate_file)
+            if subprocess.call(cmd_str,stdout=outputfile_stream, shell=True) != 0:
+              print("Error when running " + candidate_file +"!")
+              exit(2)
+          
+          if use_gzip:
+            cmd_str = "gzip -ck " + os.path.relpath(folder+"/"+filename+"/"+candidate_file) + " > " + folder+"/"+filename+"/"+candidate_file[:-4] + ".gz " 
+            if subprocess.call(cmd_str,stdout=outputfile_stream, shell=True) != 0:
+              print("Error when running " + candidate_file +"!")
+              exit(2)
+        else:
+          continue
   
   outputfile_stream.close()
 
