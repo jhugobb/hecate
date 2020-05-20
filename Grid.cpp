@@ -33,7 +33,6 @@ Grid::Grid(unsigned int size, Geo::BBox space_, TriangleMesh* m_) : mesh_(m_),
                                                                     vertices(m_->getVertices()) {
   size_ = size;
   space = space_;
-
   // Make voxels cubic
   glm::vec3 center_box = (space.maxPoint + space.minPoint)/2.0f;
   glm::vec3 size_box = space.maxPoint - space.minPoint;
@@ -41,6 +40,7 @@ Grid::Grid(unsigned int size, Geo::BBox space_, TriangleMesh* m_) : mesh_(m_),
   space.minPoint = center_box - glm::vec3(largest, largest, largest)/2.0f;
   space.maxPoint = center_box + glm::vec3(largest, largest, largest)/2.0f;
   node_size = largest/size;
+  cout << "node_size: " << node_size << endl;
   // elements = std::vector<Voxel>();
 }
 
@@ -125,12 +125,12 @@ void Grid::calculateBlackWhite(int z,
   std::vector<double> intersect_xs;
   glm::vec3 origin;
   // random double engine
-  double lower_bound = 0+0.00001;
-  double upper_bound = node_size-0.0000001;
-  std::uniform_real_distribution<double> unif(lower_bound,upper_bound);
+  float lower_bound = node_size/10000.0;
+  float upper_bound = node_size;
+  std::uniform_real_distribution<float> unif(lower_bound,upper_bound);
   std::default_random_engine re;
 
-  origin = glm::vec3(space.minPoint.x - 0.5f, coords.x + unif(re), coords.y + unif(re));
+  origin = glm::vec3(space.minPoint.x - 0.27f, coords.x + unif(re), coords.y + unif(re));
 
   for (int tri_idx : quad_node->members) {
     glm::vec3 v1, v2, v3;
@@ -208,10 +208,8 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
     boost::filesystem::path dir_n(filename + "_" + std::to_string(size_) + "/Normal");
     boost::filesystem::create_directory(dir_n);
 
-
     boost::filesystem::path dir_rle_n_8(filename + "_" + std::to_string(size_) + "/RLE_n_8");
     boost::filesystem::create_directory(dir_rle_n_8);
-
 
     boost::filesystem::path dir_rle_n_16(filename + "_" + std::to_string(size_) + "/RLE_n_16");
     boost::filesystem::create_directory(dir_rle_n_16);
@@ -221,6 +219,9 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
     
     boost::filesystem::path dir_rle_a_16(filename + "_" + std::to_string(size_) + "/RLE_a_16");
     boost::filesystem::create_directory(dir_rle_a_16);
+
+    boost::filesystem::path dir_mod(filename + "_" + std::to_string(size_) + "/Mod");
+    boost::filesystem::create_directory(dir_mod);
 
     resolution_bits = static_cast<char16_t>(size_);
   }
@@ -326,11 +327,12 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
       // #pragma omp critical
       {
         // Write Hecate (binary file)
-        saveSliceAsHEC(voxels, y);
-        saveSliceAsHEC_RLE_Naive_8b(voxels,  y);
-        saveSliceAsHEC_RLE_Naive_16b(voxels, y);
+        // saveSliceAsHEC(voxels, y);
+        // saveSliceAsHEC_RLE_Naive_8b(voxels,  y);
+        // saveSliceAsHEC_RLE_Naive_16b(voxels, y);
         saveSliceAsHEC_RLE_Alt_8b(voxels, y);
-        saveSliceAsHEC_RLE_Alt_16b(voxels, y);
+        // saveSliceAsHEC_RLE_Alt_16b(voxels, y);
+        saveSliceAsHEC_Mod_Enc(voxels, y);
       }
     }
 
@@ -678,7 +680,8 @@ void Grid::saveSliceAsHEC_RLE_Alt_8b(std::vector<Voxel> &voxels, int y) {
             cout << "Curr color: " << curr_colors << endl;
             cout << "Actual color: " << voxels[z*size_ + x].color << endl;
             cout << "Run length: " << curr_runs << endl;
-            
+            cout << "Slice number: " << y << endl;
+
             // Adjacent Black and white!
             assert(false);
           }
@@ -773,6 +776,64 @@ void Grid::saveSliceAsHEC_RLE_Alt_16b(std::vector<Voxel> &voxels, int y) {
     bin_file.close();
   } else {
     std::cout << "Unable to open file." << std::endl;
+    assert(false);
+  }
+}
+
+void Grid::saveSliceAsHEC_Mod_Enc(std::vector<Voxel> &voxels, int y) {
+
+  std::ofstream bin_file(filename_ + "_" + std::to_string(size_) + 
+                              "/Mod/"+ std::to_string(y) + ".hec", std::ios::binary | std::ios::out);
+  bin_file.write((char*) &resolution_bits, sizeof(resolution_bits));
+
+  if (bin_file.is_open()) {
+    char block;
+    uint slice_idx = 0;
+    VoxelColor curr_color = voxels[0].color;
+    bitset<8> encoding;
+    
+    switch (curr_color) {
+      case VoxelColor::BLACK:
+        encoding.set(6);      
+        break;
+      case VoxelColor::GRAY:
+        encoding.set(7);
+    }
+    uint check = 1;
+    uint enc_idx = 2;
+    uint val;
+    bool flag = true;
+    for (uint z = 0; z < size_; z++)
+    for (uint x = 0; x < size_; x++) {
+      if (flag) {
+        flag = false;
+        continue;
+      }
+      val = abs(voxels[z*size_ + x].color - curr_color);
+      curr_color = voxels[z*size_ + x].color;
+      
+      if (val == 1) {
+        encoding.set(7 - (enc_idx + 1));
+      } else if (val == 2) {
+        encoding.set(7 - enc_idx);
+      }
+
+      enc_idx+=2;
+      check++;
+      if (enc_idx >= 8) {
+        block = static_cast<unsigned char>(encoding.to_ulong());
+        bin_file.write(&block, sizeof(block));
+        enc_idx = 0;
+        encoding.reset();
+      }
+    }
+
+    bin_file.close();
+    // cout << "Check: " << check << " vs size: " << size_*size_ << endl; 
+    assert(check == size_*size_);
+  } else {
+    std::cout << "Unable to open " << filename_ + "_" + std::to_string(size_) + 
+                              "/Mod/"+ std::to_string(y) + ".hec" << std::endl;
     assert(false);
   }
 }

@@ -49,7 +49,7 @@ bool testQuadTriangle(TriangleMesh* mesh, Triangle *t, glm::vec2 &min_point, glm
  * @param max_point Maximum point of the Box
  * @return true if the triangle and the Box intersect, false otherwise
  */ 
-bool testBoxTriangle(TriangleMesh* mesh, Triangle *t, glm::vec3 &min_point, glm::vec3 &max_point, bool test2D = false);
+bool testBoxTriangle(TriangleMesh* mesh, Triangle *t, glm::vec3 &min_point, glm::vec3 &max_point);
 
 IntersectionResult rayIntersectsTriangle(glm::vec3 rayOrigin, glm::vec3 rayVector, glm::vec3 v1_tri, glm::vec3 v2_tri, glm::vec3 v3_tri, double treshold, glm::vec3& outIntersectionPoint);
 

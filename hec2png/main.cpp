@@ -494,6 +494,91 @@ void readHEC_RLE_A_16(char* filename, bool write_slices) {
   std::cout << "Total time of slicing: " << sum_time << " s." << endl;
 }
 
+void readHEC_mod(char* filename, bool write_slices) {
+  streampos size;
+  char * memblock;
+  std::vector<path> paths = std::vector<path>(directory_iterator(filename),boost::filesystem::directory_iterator());
+  std::sort(paths.begin(), paths.end());
+  bool already_have_resolution = false;
+  int resolution = 0;
+  double max_time = std::numeric_limits<double>::lowest();
+  double sum_time = 0.0;
+
+  for (uint path_idx = 0; path_idx < paths.size(); path_idx++) {
+    path& entry = paths[path_idx];
+
+    std::ifstream file (entry.string(), ios::in|ios::binary|ios::ate);
+    
+    timespec begin, end;
+    clock_gettime(CLOCK_REALTIME, &begin);
+
+    if (file.is_open())
+    {
+      size = file.tellg();
+      memblock = new char [size];
+      file.seekg (0, ios::beg);
+      file.read (memblock, size);
+      file.close();
+      if (!already_have_resolution) {
+        resolution = readResolution(memblock[0], memblock[1]);
+        std::cout << "Resolution: " << resolution  << endl;
+        already_have_resolution = true;
+      }
+      Color curr_color = W;
+      bool needs_to_set_color = true;
+      std::vector<Color> voxels;
+      bitset<8> bits;
+      for (int i = 2; i < size; i++) {
+        bits = bitset<8> (memblock[i]);
+        if (needs_to_set_color) {
+          if (bits[7] == 1) curr_color = G;
+          else if (bits[6] == 1) curr_color = B;
+          voxels.push_back(curr_color);
+        }
+        for (int idx = 0; idx < 8; idx+=2) {
+          if (needs_to_set_color) {
+            needs_to_set_color = false;
+            continue;
+          }
+          if (bits[7-idx] == 0 && bits[6-idx] == 1) {
+            if (curr_color == G) curr_color = B;
+            else if (curr_color == B) curr_color = G;
+            else {
+              cout << "1 when W" << endl;
+              assert(false);
+            }
+          } else if (bits[7-idx] == 1 && bits[6-idx] == 0) {
+            if (curr_color == G) curr_color = W;
+            else if (curr_color == W) curr_color = G;
+            else {
+              cout << "2 when B" << endl;
+              assert(false);
+            }
+          }
+           voxels.push_back(curr_color);
+        }
+      }
+
+      clock_gettime(CLOCK_REALTIME, &end);
+      double time = end.tv_sec - begin.tv_sec + ((end.tv_nsec - begin.tv_nsec) / 1E9);
+      sum_time += time;
+      if (max_time < time) max_time = time; 
+      std::cout << "Decoded " << entry.stem().string() << " -> "
+                << time << " s." << std::endl;
+
+      // std::cout << "voxels size:" << voxels.size() << endl;
+      assert((int) voxels.size() == resolution*resolution);
+
+      if (write_slices) {
+        write_slice_PNG(resolution, voxels, entry);
+      }
+      delete[] memblock;
+    } else std::cout << "Unable to open file";
+  }
+  std::cout << "Max time of slicing: " << max_time << " s." << endl;
+  std::cout << "Total time of slicing: " << sum_time << " s." << endl;
+}
+
 int main(int argc, char **argv) {
   
   if (argc != 4) {
@@ -528,6 +613,9 @@ int main(int argc, char **argv) {
       break;
     case 4:
       readHEC_RLE_A_16(argv[1], write_slices);
+      break;
+    case 5:
+      readHEC_mod(argv[1], write_slices);
       break;
     default:
       break;

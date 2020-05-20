@@ -122,7 +122,7 @@ bool testQuadTriangle(TriangleMesh* mesh, Triangle *t, glm::vec2 &min_point, glm
 }
 
 
-bool testBoxTriangle(TriangleMesh* mesh, Triangle *t, glm::vec3 &min_point, glm::vec3 &max_point, bool test2D) {
+bool testBoxTriangle(TriangleMesh* mesh, Triangle *t, glm::vec3 &min_point, glm::vec3 &max_point) {
 
   Geo::BBox box;
 

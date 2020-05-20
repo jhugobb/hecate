@@ -137,6 +137,8 @@ class Grid {
     
     void saveSliceAsHEC_RLE_Alt_16b(std::vector<Voxel> &voxels, int y);
 
+    void saveSliceAsHEC_Mod_Enc(std::vector<Voxel> &voxels, int y);
+    
     void calculateStatistics(std::vector<Voxel> &voxels, int y);
 
     void writeCSV(std::string filename);
