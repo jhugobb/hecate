@@ -60,14 +60,13 @@ void TwoDGrid::insert(int t) {
   int initial_z_grid = std::max(min_box_tri.z / node_size - 1, 0.0);
   int final_z_grid = max_box_tri.z / node_size;
 
-  glm::vec2 min_box, max_box;
   uint key;
 
   for (int y = initial_y_grid; y < final_y_grid + 1 && y < num_nodes; y++) {
     for (int z = initial_z_grid; z < final_z_grid + 1 && z < num_nodes; z++) {
       key = y * num_nodes + z;
-      min_box = grid[key]->min_point;
-      max_box = grid[key]->max_point;
+      glm::vec2 &min_box = grid[key]->min_point;
+      glm::vec2 &max_box = grid[key]->max_point;
 
       // If node intersects the projection in X of the triangle
       if (Geo::testQuadTriangle(m, tri, min_box, max_box)) {

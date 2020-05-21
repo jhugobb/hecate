@@ -1,4 +1,5 @@
 #include "Geometry.h"
+#include <iostream>
 
 namespace Geo {
 
@@ -205,7 +206,7 @@ bool testBoxTriangle(TriangleMesh* mesh, Triangle *t, glm::vec3 &min_point, glm:
   return true;
 }
 
-IntersectionResult rayIntersectsTriangle(glm::vec3 rayOrigin, glm::vec3 rayVector, glm::vec3 v1_tri, glm::vec3 v2_tri, glm::vec3 v3_tri, double threshold, glm::vec3& outIntersectionPoint) {
+IntersectionResult rayIntersectsTriangle(glm::vec3 &rayOrigin, glm::vec3 &rayVector, const glm::vec3 &v1_tri, const glm::vec3 &v2_tri, const glm::vec3 &v3_tri, double &threshold, glm::vec3& outIntersectionPoint) {
   glm::vec3 edge1, edge2;
   float f,u,v,a;
   glm::vec3 q,h,s;
@@ -216,7 +217,7 @@ IntersectionResult rayIntersectsTriangle(glm::vec3 rayOrigin, glm::vec3 rayVecto
 
   // Check if ray and triangle are parallel
   float nDotRay = glm::dot(n, rayVector);
-  if (abs(nDotRay) < threshold) {
+  if (abs(nDotRay) <= threshold) {
     // They are parallel, but are they invalid?
     glm::vec3 barycenter = (v1_tri + v2_tri + v3_tri) / 3.0f;
     if (distPointLine(barycenter, rayVector, rayOrigin) < threshold) {
@@ -252,7 +253,11 @@ IntersectionResult rayIntersectsTriangle(glm::vec3 rayOrigin, glm::vec3 rayVecto
   // At this stage we can compute t to find out where the intersection point is on the line.
   float t = f * glm::dot(edge2, q);
   if (t > threshold) { // ray intersection
+    // glm::vec3 test = v*v1_tri + u*v2_tri + (1-u-v)*v3_tri;
+    // std::cout << test.x << " " << test.y << " " << test.z << std::endl;
     outIntersectionPoint = rayOrigin + rayVector * t;
+    // outIntersectionPoint = v*v1_tri + u*v2_tri + (1-u-v)*v3_tri;
+    // std::cout << "orig: " << outIntersectionPoint.x << " " << outIntersectionPoint.y << " " << outIntersectionPoint.z << std::endl;
     // Now we check if the intersection is too close to an edge or vertex of the triangle
     float w = 1.0f - u - v;
     if ((u < threshold && v < threshold && w >= threshold) ||

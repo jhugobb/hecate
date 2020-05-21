@@ -51,7 +51,12 @@ bool testQuadTriangle(TriangleMesh* mesh, Triangle *t, glm::vec2 &min_point, glm
  */ 
 bool testBoxTriangle(TriangleMesh* mesh, Triangle *t, glm::vec3 &min_point, glm::vec3 &max_point);
 
-IntersectionResult rayIntersectsTriangle(glm::vec3 rayOrigin, glm::vec3 rayVector, glm::vec3 v1_tri, glm::vec3 v2_tri, glm::vec3 v3_tri, double treshold, glm::vec3& outIntersectionPoint);
+IntersectionResult rayIntersectsTriangle(glm::vec3 &rayOrigin, glm::vec3 &rayVector, const glm::vec3 &v1_tri, const glm::vec3 &v2_tri, const glm::vec3 &v3_tri, double &treshold, glm::vec3& outIntersectionPoint);
+
+IntersectionResult rayTriangleIntersect( 
+    glm::vec3 &orig, glm::vec3 &dir, 
+    glm::vec3 &v0, const glm::vec3 &v1, glm::vec3 &v2, double &threshold,
+    glm::vec3 &int_point);
 
 double distPointLine(glm::vec3 point, glm::vec3 lineDir, glm::vec3 pointInLine);
 

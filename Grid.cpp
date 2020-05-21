@@ -1,6 +1,7 @@
 #include <algorithm>
 
 #include <memory>
+#include <cmath>
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -15,7 +16,6 @@
 
 // PNG library
 #include "lodepng/lodepng.h"
-
 
 // Necessary to Write PLY
 template<typename ... Args>
@@ -116,52 +116,73 @@ void Grid::writePLY(int x, int y, int z, Voxel &voxel, std::ofstream &out_fobj) 
           <<'\n';
 }
 
+// a binary predicate implemented as a function:
+bool close_enough (double first, double second)
+{ return ( abs(first - second) < 0.00001); }
+
 void Grid::calculateBlackWhite(int z, 
                                glm::vec2 coords, 
                                node* quad_node, 
                                std::vector<Voxel>& voxels, 
                                double threshold) {
   // One row of intersections for each ray
-  std::vector<double> intersect_xs;
-  glm::vec3 origin;
+  std::list<double> intersect_xs;
   // random double engine
-  float lower_bound = node_size/10000.0;
-  float upper_bound = node_size;
+  float lower_bound = std::nextafter(0.f, 1.f);
+  float upper_bound = std::nextafter(node_size, 0.f);
   std::uniform_real_distribution<float> unif(lower_bound,upper_bound);
   std::default_random_engine re;
+  glm::vec3 origin = glm::vec3(space.minPoint.x - 0.5f, coords.x + unif(re), coords.y + unif(re));
 
-  origin = glm::vec3(space.minPoint.x - 0.27f, coords.x + unif(re), coords.y + unif(re));
-
-  for (int tri_idx : quad_node->members) {
-    glm::vec3 v1, v2, v3;
+  glm::vec3 rayDirection = glm::vec3(1,0,0);
+  int tri_idx;
+  for (uint i = 0; i < quad_node->members.size(); i++) {
+    tri_idx = quad_node->members[i];
     Triangle* t = triangles[tri_idx];
-    v1 = vertices[t->v1];
-    v2 = vertices[t->v2];
-    v3 = vertices[t->v3];
-    glm::vec3 rayDirection = glm::vec3(1,0,0);
+    const glm::vec3 &v1 = vertices[t->v1];
+    const glm::vec3 &v2 = vertices[t->v2];
+    const glm::vec3 &v3 = vertices[t->v3];
 
     // Keep changing rays until all are valid
     bool intersects = false;
     glm::vec3 intersection_point;
     Geo::IntersectionResult res = Geo::rayIntersectsTriangle(origin, rayDirection, v1, v2, v3, threshold, intersection_point);
     while (res == Geo::IntersectionResult::INVALID) {
-      origin = glm::vec3(space.minPoint.x - node_size, coords.x + unif(re), coords.y + unif(re));
+      origin = glm::vec3(space.minPoint.x - 0.5f, coords.x + unif(re), coords.y + unif(re));
       res = Geo::rayIntersectsTriangle(origin, rayDirection, v1, v2, v3, threshold, intersection_point);
     }
     intersects = res == Geo::IntersectionResult::INTERSECTS;
-    if (intersects) intersect_xs.push_back(intersection_point.x);
+
+    if (intersects) {
+      #pragma omp critical 
+      {
+        intersect_xs.push_back(intersection_point.x);
+      }
+    }
+  }
+
+  intersect_xs.unique(close_enough);
+
+
+  std::vector<double> ints(intersect_xs.size());
+  uint i = 0;
+  for (double d : intersect_xs) {
+    ints[i++] = d;
   }
 
   // sort them in ascending X order
-  std::sort(intersect_xs.begin(), intersect_xs.end());
+  std::sort(ints.begin(), ints.end());
+
+
   // Number of intersection so far
   uint x_idx = 0;
   for (uint x = 0; x < size_; x++) {
     if (voxels[z * size_ + x].color == VoxelColor::GRAY) continue;
-    double x_coord = space.minPoint.x + x * node_size;
-    while (x_idx < intersect_xs.size() && x_coord > intersect_xs[x_idx]) x_idx++;
+    double x_coord = space.minPoint.x + (x+1) * node_size;
+    while (x_idx < ints.size() && x_coord > ints[x_idx]) x_idx++;
     // If number of intersections so far is odd , we are inside the model
     if (x_idx % 2 == 1){
+        assert( voxels[z * size_ + x-1].color != VoxelColor::WHITE || (x == 0 && voxels[(z-1) * size_ + (size_-1)].color != VoxelColor::WHITE));
         voxels[z * size_ + x].color = VoxelColor::BLACK;
     }
   }
@@ -226,9 +247,10 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
     resolution_bits = static_cast<char16_t>(size_);
   }
 
+  #pragma omp parallel for schedule(dynamic)
   for (unsigned int y = 0; y < size_; y++) {
     std::vector<Voxel> voxels(size_*size_);
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic)
     for (unsigned int z = 0; z < size_; z++) {
       glm::vec2 coords;
 
@@ -312,7 +334,10 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
         }
 
         if (config.calculate_black_white) {
-          calculateBlackWhite(z, coords, quad_node, voxels, config.threshold_raycasting);
+          // #pragma omp critical
+          // {
+            calculateBlackWhite(z, coords, quad_node, voxels, config.threshold_raycasting);
+          // }
         }
       }
     }
@@ -324,15 +349,31 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
     }
 
     if (config.writeHEC) {
-      // #pragma omp critical
+      #pragma omp parallel sections
       {
         // Write Hecate (binary file)
         // saveSliceAsHEC(voxels, y);
-        // saveSliceAsHEC_RLE_Naive_8b(voxels,  y);
-        // saveSliceAsHEC_RLE_Naive_16b(voxels, y);
-        saveSliceAsHEC_RLE_Alt_8b(voxels, y);
-        // saveSliceAsHEC_RLE_Alt_16b(voxels, y);
-        saveSliceAsHEC_Mod_Enc(voxels, y);
+        #pragma omp section 
+        {
+          saveSliceAsHEC_RLE_Naive_8b(voxels,  y);
+        }
+
+        #pragma omp section 
+        {
+          saveSliceAsHEC_RLE_Naive_16b(voxels, y);
+        }
+
+        #pragma omp section 
+        {
+          saveSliceAsHEC_RLE_Alt_8b(voxels, y);
+        }
+
+        #pragma omp section 
+        {
+          saveSliceAsHEC_RLE_Alt_16b(voxels, y);
+        }
+
+        // saveSliceAsHEC_Mod_Enc(voxels, y);
       }
     }
 
