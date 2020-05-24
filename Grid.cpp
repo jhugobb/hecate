@@ -118,7 +118,7 @@ void Grid::writePLY(int x, int y, int z, Voxel &voxel, std::ofstream &out_fobj) 
 
 // a binary predicate implemented as a function:
 bool close_enough (double first, double second)
-{ return ( abs(first - second) < 0.00001); }
+{ return ( abs(first - second) < 0.009); }
 
 void Grid::calculateBlackWhite(int z, 
                                glm::vec2 coords, 
@@ -126,7 +126,7 @@ void Grid::calculateBlackWhite(int z,
                                std::vector<Voxel>& voxels, 
                                double threshold) {
   // One row of intersections for each ray
-  std::list<double> intersect_xs;
+  std::vector<double> intersect_xs;
   // random double engine
   float lower_bound = std::nextafter(0.f, 1.f);
   float upper_bound = std::nextafter(node_size, 0.f);
@@ -136,42 +136,52 @@ void Grid::calculateBlackWhite(int z,
 
   glm::vec3 rayDirection = glm::vec3(1,0,0);
   int tri_idx;
-  for (uint i = 0; i < quad_node->members.size(); i++) {
-    tri_idx = quad_node->members[i];
-    Triangle* t = triangles[tri_idx];
-    const glm::vec3 &v1 = vertices[t->v1];
-    const glm::vec3 &v2 = vertices[t->v2];
-    const glm::vec3 &v3 = vertices[t->v3];
+  uint count;
+  bool done = false;
+  while (!done) {
+    intersect_xs.clear();
+    count = 0;
+    for (uint i = 0; i < quad_node->members.size(); i++) {
+      tri_idx = quad_node->members[i];
+      Triangle* t = triangles[tri_idx];
+      const glm::vec3 &v1 = vertices[t->v1];
+      const glm::vec3 &v2 = vertices[t->v2];
+      const glm::vec3 &v3 = vertices[t->v3];
 
-    // Keep changing rays until all are valid
-    bool intersects = false;
-    glm::vec3 intersection_point;
-    Geo::IntersectionResult res = Geo::rayIntersectsTriangle(origin, rayDirection, v1, v2, v3, threshold, intersection_point);
-    while (res == Geo::IntersectionResult::INVALID) {
-      origin = glm::vec3(space.minPoint.x - 0.5f, coords.x + unif(re), coords.y + unif(re));
-      res = Geo::rayIntersectsTriangle(origin, rayDirection, v1, v2, v3, threshold, intersection_point);
-    }
-    intersects = res == Geo::IntersectionResult::INTERSECTS;
+      // Keep changing rays until all are valid
+      bool intersects = false;
+      glm::vec3 intersection_point;
+      Geo::IntersectionResult res = Geo::rayIntersectsTriangle(origin, rayDirection, v1, v2, v3, threshold, intersection_point);
+      // while (res == Geo::IntersectionResult::INVALID) {
+      //   origin = glm::vec3(space.minPoint.x - 0.5f, coords.x + unif(re), coords.y + unif(re));
+      //   res = Geo::rayIntersectsTriangle(origin, rayDirection, v1, v2, v3, threshold, intersection_point);
+      // }
+      if (intersects == Geo::IntersectionResult::INVALID) break;
+      intersects = res == Geo::IntersectionResult::INTERSECTS;
 
-    if (intersects) {
-      #pragma omp critical 
-      {
-        intersect_xs.push_back(intersection_point.x);
+      if (intersects) {
+        #pragma omp critical 
+        {
+          intersect_xs.push_back(intersection_point.x);
+        }
       }
+      count++;
     }
+    if (count >= quad_node->members.size())
+      done = true;
   }
 
-  intersect_xs.unique(close_enough);
+  // intersect_xs.unique(close_enough);
 
 
-  std::vector<double> ints(intersect_xs.size());
-  uint i = 0;
-  for (double d : intersect_xs) {
-    ints[i++] = d;
-  }
+  // std::vector<double> ints(intersect_xs.size());
+  // uint i = 0;
+  // for (double d : intersect_xs) {
+  //   ints[i++] = d;
+  // }
 
   // sort them in ascending X order
-  std::sort(ints.begin(), ints.end());
+  std::sort(intersect_xs.begin(), intersect_xs.end());
 
 
   // Number of intersection so far
@@ -179,10 +189,9 @@ void Grid::calculateBlackWhite(int z,
   for (uint x = 0; x < size_; x++) {
     if (voxels[z * size_ + x].color == VoxelColor::GRAY) continue;
     double x_coord = space.minPoint.x + (x+1) * node_size;
-    while (x_idx < ints.size() && x_coord > ints[x_idx]) x_idx++;
+    while (x_idx < intersect_xs.size() && x_coord >= intersect_xs[x_idx]) x_idx++;
     // If number of intersections so far is odd , we are inside the model
     if (x_idx % 2 == 1){
-        assert( voxels[z * size_ + x-1].color != VoxelColor::WHITE || (x == 0 && voxels[(z-1) * size_ + (size_-1)].color != VoxelColor::WHITE));
         voxels[z * size_ + x].color = VoxelColor::BLACK;
     }
   }

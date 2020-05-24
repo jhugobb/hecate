@@ -109,7 +109,6 @@ class Grid {
     // used for alt
     // int n_times_switched[2] = {0, 0}; 
     // bool wroteAll1s[2] = {false, false};
-
     std::vector<Voxel> lastSlice;
     std::vector<double> similarPercents;
 
