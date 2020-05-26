@@ -16,6 +16,15 @@ enum Color {
   G
 };
 
+struct {
+    bool operator()(boost::filesystem::path a, boost::filesystem::path b) const
+    {   
+      if (a.string().size() == b.string().size())
+        return a.string() < b.string();
+      else return (a.string().size() < b.string().size());
+    }   
+} customLess;
+
 int readResolution(char mem1, char mem2) {
 
   bitset<8> res_1(mem1);
@@ -579,6 +588,102 @@ void readHEC_mod(char* filename, bool write_slices) {
   std::cout << "Total time of slicing: " << sum_time << " s." << endl;
 }
 
+void readHEC_Mod_Slice(char* filename, bool write_slices) {
+  streampos size;
+  char * memblock;
+  std::vector<path> paths = std::vector<path>(directory_iterator(filename),boost::filesystem::directory_iterator());
+  std::sort(paths.begin(), paths.end(), customLess);
+  bool already_have_resolution = false;
+  int resolution = 0;
+  double max_time = std::numeric_limits<double>::lowest();
+  double sum_time = 0.0;
+  bool get_first_slice = true;
+  std::vector<Color> lastSlice;
+  for (uint path_idx = 0; path_idx < paths.size(); path_idx++) {
+    path& entry = paths[path_idx];
+    // std::cout << entry.path().string() << '\n';
+
+    std::ifstream file (entry.string(), ios::in|ios::binary|ios::ate);
+    
+    timespec begin, end;
+    clock_gettime(CLOCK_REALTIME, &begin);
+
+    if (file.is_open())
+    {
+      size = file.tellg();
+      memblock = new char [size];
+      file.seekg (0, ios::beg);
+      file.read (memblock, size);
+      file.close();
+      if (!already_have_resolution) {
+        resolution = readResolution(memblock[0], memblock[1]);
+        std::cout << "Resolution: " << resolution  << endl;
+        already_have_resolution = true;
+      }
+      int voxels_idx = 0;
+      
+      std::vector<Color> voxels;
+      bitset<8> bits;
+      if (get_first_slice) {
+        for (int i = 2; i < size; i++) {
+          bits = bitset<8> (memblock[i]);
+          for (int idx = 0; idx < 8; idx+=2) {
+            if (bits[idx] == 0 && bits[idx+1] == 0) voxels.push_back(Color::W);
+            else if (bits[idx] == 0 && bits[idx+1] == 1) voxels.push_back(Color::B);
+            else if (bits[idx] == 1 && bits[idx+1] == 0) voxels.push_back(Color::G);
+            else assert(false);
+          }
+        }
+        get_first_slice = false;
+      } else {
+        for (int i = 2; i < size; i++) {
+          bits = bitset<8> (memblock[i]);
+          for (int idx = 0; idx < 8; idx+=2) {
+            if (bits[idx] == 0 && bits[idx+1] == 0) voxels.push_back(lastSlice[voxels_idx++]);
+            else if (bits[idx] == 0 && bits[idx+1] == 1) {
+              if (lastSlice[voxels_idx] == G) {
+                voxels.push_back(B);
+              } else if (lastSlice[voxels_idx] == B) {
+                voxels.push_back(G);
+              } else {
+                assert(false);
+              }
+              voxels_idx++;
+            } 
+            else if (bits[idx] == 1 && bits[idx+1] == 0) {
+              if (lastSlice[voxels_idx] == G) {
+                voxels.push_back(W);
+              } else if (lastSlice[voxels_idx] == W) {
+                voxels.push_back(G);
+              }
+              voxels_idx++;
+            }
+            else assert(false);
+          }
+        }
+      }
+
+      lastSlice = voxels;
+      clock_gettime(CLOCK_REALTIME, &end);
+      double time = end.tv_sec - begin.tv_sec + ((end.tv_nsec - begin.tv_nsec) / 1E9);
+      sum_time += time;
+      if (max_time < time) max_time = time; 
+      std::cout << "Decoded " << entry.stem().string() << " -> "
+                << time << " s." << std::endl;
+
+      // std::cout << "voxels size:" << voxels.size() << endl;
+      assert((int) voxels.size() == resolution*resolution);
+
+      if (write_slices) {
+        write_slice_PNG(resolution, voxels, entry);
+      }
+      delete[] memblock;
+    } else std::cout << "Unable to open file";
+  }
+  std::cout << "Max time of slicing: " << max_time << " s." << endl;
+  std::cout << "Total time of slicing: " << sum_time << " s." << endl;
+}
+
 int main(int argc, char **argv) {
   
   if (argc != 4) {
@@ -616,6 +721,9 @@ int main(int argc, char **argv) {
       break;
     case 5:
       readHEC_mod(argv[1], write_slices);
+      break;
+    case 6:
+      readHEC_Mod_Slice(argv[1], write_slices);
       break;
     default:
       break;
