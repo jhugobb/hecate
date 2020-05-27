@@ -118,7 +118,7 @@ void Grid::writePLY(int x, int y, int z, Voxel &voxel, std::ofstream &out_fobj) 
 
 // a binary predicate implemented as a function:
 bool close_enough (double first, double second)
-{ return ( abs(first - second) < 0.009); }
+{ return ( abs(first - second) < 0.00001); }
 
 void Grid::calculateBlackWhite(int z, 
                                glm::vec2 coords, 
@@ -126,7 +126,7 @@ void Grid::calculateBlackWhite(int z,
                                std::vector<Voxel>& voxels, 
                                double threshold) {
   // One row of intersections for each ray
-  std::vector<double> intersect_xs;
+  std::list<double> intersect_xs;
   // random double engine
   float lower_bound = std::nextafter(0.f, 1.f);
   float upper_bound = std::nextafter(node_size, 0.f);
@@ -138,7 +138,7 @@ void Grid::calculateBlackWhite(int z,
   int tri_idx;
   uint count;
   bool done = false;
-  while (!done) {
+  // while (!done) {
     intersect_xs.clear();
     count = 0;
     for (uint i = 0; i < quad_node->members.size(); i++) {
@@ -152,11 +152,11 @@ void Grid::calculateBlackWhite(int z,
       bool intersects = false;
       glm::vec3 intersection_point;
       Geo::IntersectionResult res = Geo::rayIntersectsTriangle(origin, rayDirection, v1, v2, v3, threshold, intersection_point);
-      // while (res == Geo::IntersectionResult::INVALID) {
-      //   origin = glm::vec3(space.minPoint.x - 0.5f, coords.x + unif(re), coords.y + unif(re));
-      //   res = Geo::rayIntersectsTriangle(origin, rayDirection, v1, v2, v3, threshold, intersection_point);
-      // }
-      if (res == Geo::IntersectionResult::INVALID) break;
+      while (res == Geo::IntersectionResult::INVALID) {
+        origin = glm::vec3(space.minPoint.x - 0.5f, coords.x + unif(re), coords.y + unif(re));
+        res = Geo::rayIntersectsTriangle(origin, rayDirection, v1, v2, v3, threshold, intersection_point);
+      }
+      // if (res == Geo::IntersectionResult::INVALID) break;
       intersects = res == Geo::IntersectionResult::INTERSECTS;
 
       if (intersects) {
@@ -167,21 +167,21 @@ void Grid::calculateBlackWhite(int z,
       }
       count++;
     }
-    if (count >= quad_node->members.size())
-      done = true;
-  }
-
-  // intersect_xs.unique(close_enough);
-
-
-  // std::vector<double> ints(intersect_xs.size());
-  // uint i = 0;
-  // for (double d : intersect_xs) {
-  //   ints[i++] = d;
+    // if (count >= quad_node->members.size())
+    //   done = true;
   // }
 
+  intersect_xs.unique(close_enough);
+
+
+  std::vector<double> ints(intersect_xs.size());
+  uint i = 0;
+  for (double d : intersect_xs) {
+    ints[i++] = d;
+  }
+
   // sort them in ascending X order
-  std::sort(intersect_xs.begin(), intersect_xs.end());
+  std::sort(ints.begin(), ints.end());
 
 
   // Number of intersection so far
@@ -189,7 +189,7 @@ void Grid::calculateBlackWhite(int z,
   for (uint x = 0; x < size_; x++) {
     if (voxels[z * size_ + x].color == VoxelColor::GRAY) continue;
     double x_coord = space.minPoint.x + (x+1) * node_size;
-    while (x_idx < intersect_xs.size() && x_coord >= intersect_xs[x_idx]) x_idx++;
+    while (x_idx < ints.size() && x_coord >= ints[x_idx]) x_idx++;
     // If number of intersections so far is odd , we are inside the model
     if (x_idx % 2 == 1){
         voxels[z * size_ + x].color = VoxelColor::BLACK;
@@ -255,6 +255,9 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
 
     boost::filesystem::path dir_mod_s(filename + "_" + std::to_string(size_) + "/Mod_Slice");
     boost::filesystem::create_directory(dir_mod_s);
+
+    boost::filesystem::path dir_mod_rle(filename + "_" + std::to_string(size_) + "/Mod_RLE");
+    boost::filesystem::create_directory(dir_mod_rle);
 
     resolution_bits = static_cast<char16_t>(size_);
   }
@@ -346,18 +349,12 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
         }
 
         if (config.calculate_black_white) {
-          // #pragma omp critical
-          // {
             calculateBlackWhite(z, coords, quad_node, voxels, config.threshold_raycasting);
-          // }
         }
       }
     }
     if (config.writePNG) {
-      // #pragma omp critical 
-      {
-        saveSliceAsPNG(voxels, y);
-      }
+      saveSliceAsPNG(voxels, y);
     }
 
     if (config.writeHEC) {
@@ -390,6 +387,11 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
         #pragma omp section
         {
           saveSliceAsHEC_Mod_Slice(voxels, y);
+        }
+
+        #pragma omp section 
+        {
+          saveSliceAsHEC_Mod_RLE(voxels, y);
         }
       }
     }

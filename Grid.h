@@ -110,6 +110,7 @@ class Grid {
     // int n_times_switched[2] = {0, 0}; 
     // bool wroteAll1s[2] = {false, false};
     std::vector<Voxel> lastSlice;
+    std::vector<Voxel> lastSlice_rle;
     std::vector<double> similarPercents;
 
     bool testVoxelGray_Naive(int &representative, glm::vec3 voxel_min, glm::vec3 voxel_max, std::vector<int> candidates);
@@ -139,6 +140,10 @@ class Grid {
     void saveSliceAsHEC_Mod_Enc(std::vector<Voxel> &voxels, int y);
 
     void saveSliceAsHEC_Mod_Slice(std::vector<Voxel> &voxels, int y);
+    
+    void saveSliceAsHEC_Mod_RLE(std::vector<Voxel> &voxels, int y);
+
+    void saveColors_RLE_N_16b(std::vector<VoxelColor> &voxels, int y);
     
     void calculateStatistics(std::vector<Voxel> &voxels, int y);
 

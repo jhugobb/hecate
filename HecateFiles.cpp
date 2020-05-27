@@ -398,7 +398,6 @@ void Grid::saveSliceAsHEC_Mod_Enc(std::vector<Voxel> &voxels, int y) {
 
   if (bin_file.is_open()) {
     char block;
-    uint slice_idx = 0;
     VoxelColor curr_color = voxels[0].color;
     bitset<8> encoding;
     
@@ -408,6 +407,9 @@ void Grid::saveSliceAsHEC_Mod_Enc(std::vector<Voxel> &voxels, int y) {
         break;
       case VoxelColor::GRAY:
         encoding.set(7);
+        break;
+      default:
+        break;
     }
     uint check = 1;
     uint enc_idx = 2;
@@ -554,5 +556,133 @@ void Grid::saveSliceAsHEC_Mod_Slice(std::vector<Voxel> &voxels, int y) {
                                 "/Mod_Slice/"+ std::to_string(y) + ".hec" << std::endl;
       assert(false);
     }
+  }
+}
+
+void Grid::saveSliceAsHEC_Mod_RLE(std::vector<Voxel> &voxels, int y) {
+  
+  std::vector<VoxelColor> mod_slice(voxels.size());
+  if (y == 0) {
+    lastSlice_rle = voxels;
+    for (uint i = 0; i < voxels.size(); i++) {
+      mod_slice[i] = voxels[i].color;
+    }
+    saveColors_RLE_N_16b(mod_slice, y);
+  } else {
+      for (uint i = 0; i < voxels.size(); i++) {
+        switch (abs(voxels[i].color - lastSlice_rle[i].color))
+        {
+        case 0:
+          mod_slice[i] = WHITE;
+          break;
+        case 1: 
+          mod_slice[i] = BLACK;
+          break;
+        case 2:
+          mod_slice[i] = GRAY;
+          break;
+        default:
+          assert(false);
+          break;
+        }
+      } 
+      lastSlice_rle = voxels;
+      saveColors_RLE_N_16b(mod_slice, y);
+  }
+}
+
+void Grid::saveColors_RLE_N_16b(std::vector<VoxelColor> &voxels, int y) {
+  
+  std::ofstream bin_file(filename_ + "_" + std::to_string(size_) + 
+                              "/Mod_RLE/"+ std::to_string(y) + ".hec", std::ios::binary | std::ios::out);
+  bin_file.write((char*) &resolution_bits, sizeof(resolution_bits));
+  
+  if (bin_file.is_open()) {
+    const int size_run = 16384; // 2^14
+    std::vector<std::bitset<16>> runs_to_write;
+    std::bitset<16> bits_to_write;
+    bool needs_to_set_color = true;
+    int curr_runs = 0;
+    VoxelColor curr_colors;
+
+    for (uint z = 0; z < size_; z++) { 
+      for (uint x = 0; x < size_; x++) {
+
+        if (needs_to_set_color) {
+          curr_colors = voxels[z*size_ + x];
+          needs_to_set_color = false;
+        }
+
+        if (voxels[z*size_ + x] == curr_colors) {
+          curr_runs++;
+          if (curr_runs >= size_run) {
+            bits_to_write.set();
+            switch (curr_colors) {
+              case VoxelColor::BLACK:
+                bits_to_write.set(15, 0);
+                break;
+              case VoxelColor::GRAY:
+                bits_to_write.set(14, 0);
+                break;
+              default:
+                bits_to_write.set(15, 0);
+                bits_to_write.set(14, 0);
+                break;
+            }
+            runs_to_write.push_back(bits_to_write);
+            bits_to_write.reset();
+            needs_to_set_color = true;
+            curr_runs = 0;
+          }
+        } else {
+          curr_runs--;
+          bits_to_write = std::bitset<16>(curr_runs);
+          switch (curr_colors) {
+            case VoxelColor::BLACK:
+              bits_to_write.set(14, 1);
+              break;
+            case VoxelColor::GRAY:
+              bits_to_write.set(15, 1);
+              break;
+            default:
+              break;
+          }
+          runs_to_write.push_back(bits_to_write);
+          curr_colors = voxels[z*size_ + x];
+          curr_runs = 1;
+        }
+
+      }
+    }
+
+    if (curr_runs > 0) {
+      bits_to_write = std::bitset<16>(--curr_runs);
+
+      assert(bits_to_write[15] == 0 && bits_to_write[14] == 0);
+      switch (curr_colors) {
+        case VoxelColor::BLACK:
+          bits_to_write.set(14, 1);
+          break;
+        case VoxelColor::GRAY:
+          bits_to_write.set(15, 1);
+          break;
+        default:
+          break;
+      }
+      runs_to_write.push_back(bits_to_write);
+    } 
+
+    uint size_of_memblock = runs_to_write.size();
+    char16_t* memblock = new char16_t[size_of_memblock];
+    int i = 0;
+    for (bitset<16> b : runs_to_write) {
+      memblock[i++] = static_cast<char16_t>(b.to_ulong());
+    }
+    bin_file.write((char*) memblock, size_of_memblock * sizeof(*memblock));
+    delete[] memblock;
+    bin_file.close();
+  } else {
+    std::cout << "Unable to open file." << std::endl;
+    assert(false);
   }
 }
