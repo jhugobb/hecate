@@ -1,3 +1,4 @@
+import glob
 import os
 import subprocess
 import sys
@@ -44,6 +45,23 @@ def main():
               exit(2)
         else:
           continue
+      if (os.listdir(folder+"/"+filename)):
+        hec_files = glob.glob(folder+"/"+filename+"/*.hec")
+        z7_files = glob.glob(folder+"/"+filename+"/*.7z")
+        gz_files = glob.glob(folder+"/"+filename+"/*.gz")
+        if subprocess.call("mkdir " + folder+"/"+filename+"/hec " + folder+"/"+filename+"/7z " + folder+"/"+filename+"/gz", stdout=outputfile_stream, shell=True) != 0:
+          print("Error while trying to create folders!")
+          exit(2)
+          "mv " + hec_files + " " + folder+"/"+filename+"/hec"
+        if subprocess.call(['mv'] + hec_files + [folder+"/"+filename+"/hec"], stdout=outputfile_stream) != 0:
+          print("Error while trying to move hec!")
+          exit(2)
+        if subprocess.call(['mv'] + z7_files + [folder+"/"+filename+"/7z"], stdout=outputfile_stream) != 0:
+          print("Error while trying to move 7z!")
+          exit(2)
+        if subprocess.call(['mv'] + gz_files + [folder+"/"+filename+"/gz"], stdout=outputfile_stream) != 0:
+          print("Error while trying to move gz!")
+          exit(2)
   
   outputfile_stream.close()
 

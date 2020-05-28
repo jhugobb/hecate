@@ -118,7 +118,7 @@ void Grid::writePLY(int x, int y, int z, Voxel &voxel, std::ofstream &out_fobj) 
 
 // a binary predicate implemented as a function:
 bool close_enough (double first, double second)
-{ return ( abs(first - second) < 0.00001); }
+{ return ( abs(first - second) < 0.000001); }
 
 void Grid::calculateBlackWhite(int z, 
                                glm::vec2 coords, 
@@ -132,7 +132,7 @@ void Grid::calculateBlackWhite(int z,
   float upper_bound = std::nextafter(node_size, 0.f);
   std::uniform_real_distribution<float> unif(lower_bound,upper_bound);
   std::default_random_engine re;
-  glm::vec3 origin = glm::vec3(space.minPoint.x - 0.5f, coords.x + unif(re), coords.y + unif(re));
+  glm::vec3 origin = glm::vec3(space.minPoint.x - 100.5f, coords.x + unif(re), coords.y + unif(re));
 
   glm::vec3 rayDirection = glm::vec3(1,0,0);
   int tri_idx;
@@ -153,7 +153,7 @@ void Grid::calculateBlackWhite(int z,
       glm::vec3 intersection_point;
       Geo::IntersectionResult res = Geo::rayIntersectsTriangle(origin, rayDirection, v1, v2, v3, threshold, intersection_point);
       while (res == Geo::IntersectionResult::INVALID) {
-        origin = glm::vec3(space.minPoint.x - 0.5f, coords.x + unif(re), coords.y + unif(re));
+        origin = glm::vec3(space.minPoint.x - 100.5f, coords.x + unif(re), coords.y + unif(re));
         res = Geo::rayIntersectsTriangle(origin, rayDirection, v1, v2, v3, threshold, intersection_point);
       }
       // if (res == Geo::IntersectionResult::INVALID) break;
@@ -171,7 +171,7 @@ void Grid::calculateBlackWhite(int z,
     //   done = true;
   // }
 
-  intersect_xs.unique(close_enough);
+  // intersect_xs.unique(close_enough);
 
 
   std::vector<double> ints(intersect_xs.size());

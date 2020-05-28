@@ -13,7 +13,8 @@ using namespace boost::filesystem;
 enum Color {
   W,
   B,
-  G
+  G,
+  R
 };
 
 struct {
@@ -49,6 +50,12 @@ void write_slice_PNG(int resolution, std::vector<Color> &voxels, path& entry) {
       value = 128;
     } else if (voxels[z*resolution+x] == Color::W) {
       value = 255;
+    } else if (voxels[z*resolution+x] == Color::R) {
+      image[4 * resolution * z + 4 * x + 0] = 255;
+      image[4 * resolution * z + 4 * x + 1] = 0;
+      image[4 * resolution * z + 4 * x + 2] = 0;
+      image[4 * resolution * z + 4 * x + 3] = 255;
+      continue;
     }
     image[4 * resolution * z + 4 * x + 0] = value;
     image[4 * resolution * z + 4 * x + 1] = value;
@@ -695,7 +702,11 @@ void readHEC_Mod_RLE_N_16(char* filename, bool write_slices) {
   double sum_time = 0.0;
   bool need_first_slice = true;
   std::vector<Color> lastSlice;
-
+  std::vector<Color> actual_voxels;
+  std::vector<Color> voxels;
+  std::vector<int> count;
+  std::vector<Color> mod_voxels;
+  
   for (uint path_idx = 0; path_idx < paths.size(); path_idx++) {
     path& entry = paths[path_idx];
     std::ifstream file (entry.string(), ios::in|ios::binary|ios::ate);
@@ -714,10 +725,12 @@ void readHEC_Mod_RLE_N_16(char* filename, bool write_slices) {
         resolution = readResolution(memblock[0], memblock[1]);
         std::cout << "Resolution: " << resolution  << endl;
         already_have_resolution = true;
+        actual_voxels.resize(resolution*resolution);
+        mod_voxels.resize(resolution*resolution);
       }
       
-      std::vector<Color> voxels;
-      std::vector<int> count;
+      voxels.clear();
+      count.clear();
       bitset<8> bits_first;
       bitset<8> bits_second;
       bitset<16> bits;
@@ -741,7 +754,6 @@ void readHEC_Mod_RLE_N_16(char* filename, bool write_slices) {
       }
       delete[] memblock;
 
-      std::vector<Color> mod_voxels(resolution*resolution);
       int voxels_idx = 0;
       int num_voxels_written = 0;      
       for (int z = 0; z < resolution; z++)
@@ -767,16 +779,15 @@ void readHEC_Mod_RLE_N_16(char* filename, bool write_slices) {
         }
         need_first_slice = false;
       } else {
-        voxels.clear();
-        std::vector<Color> actual_voxels(mod_voxels.size());
+        // #pragma omp parallel for
         for (uint i = 0; i < mod_voxels.size(); i++) {
           if (mod_voxels[i] == W){
             actual_voxels[i] = lastSlice[i];
-          } else if (mod_voxels[i] == G) {
+          } else if (mod_voxels[i] == B) {
             if (lastSlice[i] == G) actual_voxels[i] = B;
             else if (lastSlice[i] == B) actual_voxels[i] = G;
             else assert(false);
-          } else if (mod_voxels[i] == B) {
+          } else if (mod_voxels[i] == G) {
             if (lastSlice[i] == W) actual_voxels[i] = G;
             else if (lastSlice[i] == G) actual_voxels[i] = W;
             else assert(false);

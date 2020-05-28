@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <omp.h>
 
 #include "../TriangleMesh.h"
 #include "../Grid.h"
@@ -19,6 +20,8 @@ int main(int argc, char **argv)
 		cout << "Usage: ./hecate_bash filename grid_size #voxelization_technique calculateblackwhite? thresholdraycasting writePNG? writePLY? writeCSV? writeHEC?\n";
 		return -1;
 	} 
+
+	omp_set_num_threads(6);
 
 	//Filename needs to be models/path/to/model
 	std::string filename(argv[1]);
