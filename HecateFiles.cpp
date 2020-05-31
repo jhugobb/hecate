@@ -291,6 +291,7 @@ void Grid::saveSliceAsHEC_RLE_Alt_8b(std::vector<Voxel> &voxels, int y) {
             cout << "Actual color: " << voxels[z*size_ + x].color << endl;
             cout << "Run length: " << curr_runs << endl;
             cout << "Slice number: " << y << endl;
+            cout << "Row number: " << z << endl;
 
             // Adjacent Black and white!
             assert(false);

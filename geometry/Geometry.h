@@ -11,7 +11,8 @@ namespace Geo {
   enum IntersectionResult {
     NOT_INTERSECTS,
     INTERSECTS,
-    INVALID
+    INVALID_NOT_INTERSECTS,
+    INVALID_INTERSECTS
   };
 
 const float EPSILON = 0.0000001;

@@ -222,7 +222,7 @@ IntersectionResult rayIntersectsTriangle(glm::vec3 &rayOrigin, glm::vec3 &rayVec
     glm::vec3 barycenter = (v1_tri + v2_tri + v3_tri) / 3.0f;
     if (distPointLine(barycenter, rayVector, rayOrigin) <= threshold) {
       // Ray is invalid
-      return IntersectionResult::INVALID;
+      return IntersectionResult::INVALID_NOT_INTERSECTS;
     } else {
       // It's not invalid, just doesn't intersect
       return IntersectionResult::NOT_INTERSECTS;
@@ -252,7 +252,7 @@ IntersectionResult rayIntersectsTriangle(glm::vec3 &rayOrigin, glm::vec3 &rayVec
 
   // At this stage we can compute t to find out where the intersection point is on the line.
   float t = f * glm::dot(edge2, q);
-  if (t > threshold) { // ray intersection
+  if (t >= threshold) { // ray intersection
     outIntersectionPoint = rayOrigin + rayVector * t;
     // Now we check if the intersection is too close to an edge or vertex of the triangle
     float w = 1.0f - u - v;
@@ -260,14 +260,14 @@ IntersectionResult rayIntersectsTriangle(glm::vec3 &rayOrigin, glm::vec3 &rayVec
         (v < threshold && w < threshold && u >= threshold) ||
         (w < threshold && u < threshold && v >= threshold)) {
       // Too close to a vertex
-      return IntersectionResult::INVALID;
+      return IntersectionResult::INVALID_INTERSECTS;
     }
 
     if ((u < threshold && v >= threshold && w >= threshold) ||
         (v < threshold && w >= threshold && u >= threshold) ||
         (w < threshold && u >= threshold && v >= threshold)) {
       // Too close to an edge
-      return IntersectionResult::INVALID;
+      return IntersectionResult::INVALID_INTERSECTS;
     }
 
     return IntersectionResult::INTERSECTS;
@@ -277,7 +277,7 @@ IntersectionResult rayIntersectsTriangle(glm::vec3 &rayOrigin, glm::vec3 &rayVec
 }
 
 double distPointLine(glm::vec3 point, glm::vec3 lineDir, glm::vec3 pointInLine) {
-  return glm::length(glm::cross(pointInLine-point, lineDir)) / glm::length(lineDir);
+  return glm::length((pointInLine - point) - (glm::dot(pointInLine - point, lineDir) * lineDir));
 }
 
 bool isRayInvalid(glm::vec3 rayOrigin, glm::vec3 rayVector, glm::vec3 v1_tri, glm::vec3 v2_tri, glm::vec3 v3_tri, double threshold) {

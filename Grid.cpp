@@ -118,7 +118,7 @@ void Grid::writePLY(int x, int y, int z, Voxel &voxel, std::ofstream &out_fobj) 
 
 // a binary predicate implemented as a function:
 bool close_enough (double first, double second)
-{ return ( abs(first - second) < 0.000001); }
+{ return ( abs(first - second) < 0.0000001); }
 
 void Grid::calculateBlackWhite(int z, 
                                glm::vec2 coords, 
@@ -128,19 +128,22 @@ void Grid::calculateBlackWhite(int z,
   // One row of intersections for each ray
   std::list<double> intersect_xs;
   // random double engine
-  float lower_bound = std::nextafter(0.f, 1.f);
-  float upper_bound = std::nextafter(node_size, 0.f);
+  float lower_bound = 0.00001f;
+  float upper_bound = node_size - 0.00001f;
   std::uniform_real_distribution<float> unif(lower_bound,upper_bound);
   std::default_random_engine re;
-  glm::vec3 origin = glm::vec3(space.minPoint.x - 100.5f, coords.x + unif(re), coords.y + unif(re));
+  glm::vec3 origin;
 
   glm::vec3 rayDirection = glm::vec3(1,0,0);
   int tri_idx;
   uint count;
   bool done = false;
-  // while (!done) {
+  int num_tries = 0;
+  while (!done) {
     intersect_xs.clear();
     count = 0;
+    num_tries++;
+    origin = glm::vec3(space.minPoint.x - 10.5f, coords.x + unif(re), coords.y + unif(re));
     for (uint i = 0; i < quad_node->members.size(); i++) {
       tri_idx = quad_node->members[i];
       Triangle* t = triangles[tri_idx];
@@ -152,11 +155,15 @@ void Grid::calculateBlackWhite(int z,
       bool intersects = false;
       glm::vec3 intersection_point;
       Geo::IntersectionResult res = Geo::rayIntersectsTriangle(origin, rayDirection, v1, v2, v3, threshold, intersection_point);
-      while (res == Geo::IntersectionResult::INVALID) {
-        origin = glm::vec3(space.minPoint.x - 100.5f, coords.x + unif(re), coords.y + unif(re));
-        res = Geo::rayIntersectsTriangle(origin, rayDirection, v1, v2, v3, threshold, intersection_point);
+      // while (res == Geo::IntersectionResult::INVALID) {
+      //   origin = glm::vec3(space.minPoint.x - 100.5f, coords.x + unif(re), coords.y + unif(re));
+      //   res = Geo::rayIntersectsTriangle(origin, rayDirection, v1, v2, v3, threshold, intersection_point);
+      // }
+      if (res == Geo::IntersectionResult::INVALID_INTERSECTS || res == Geo::IntersectionResult::INVALID_NOT_INTERSECTS) {
+        if (num_tries < 3)
+          break;
+        else res = static_cast<Geo::IntersectionResult>(res - 2);
       }
-      // if (res == Geo::IntersectionResult::INVALID) break;
       intersects = res == Geo::IntersectionResult::INTERSECTS;
 
       if (intersects) {
@@ -167,11 +174,11 @@ void Grid::calculateBlackWhite(int z,
       }
       count++;
     }
-    // if (count >= quad_node->members.size())
-    //   done = true;
-  // }
+    if (count >= quad_node->members.size())
+      done = true;
+  }
 
-  // intersect_xs.unique(close_enough);
+  intersect_xs.unique(close_enough);
 
 
   std::vector<double> ints(intersect_xs.size());
@@ -188,8 +195,8 @@ void Grid::calculateBlackWhite(int z,
   uint x_idx = 0;
   for (uint x = 0; x < size_; x++) {
     if (voxels[z * size_ + x].color == VoxelColor::GRAY) continue;
-    double x_coord = space.minPoint.x + (x+1) * node_size;
-    while (x_idx < ints.size() && x_coord >= ints[x_idx]) x_idx++;
+    double x_coord = space.minPoint.x + (x) * node_size;
+    while (x_idx < ints.size() && x_coord > ints[x_idx]) x_idx++;
     // If number of intersections so far is odd , we are inside the model
     if (x_idx % 2 == 1){
         voxels[z * size_ + x].color = VoxelColor::BLACK;
@@ -216,6 +223,11 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
   // std::ofstream bin_file_rle_alternated_16;
 
   filename_ = filename;
+
+  if (config.writePNG) {
+    boost::filesystem::path slices_dir("slices");
+    boost::filesystem::create_directory(slices_dir);
+  }
 
   if (config.writePLY) {
     out_fobj.open(filename + "_" + std::to_string(size_) + "/" + filename + "_" + std::to_string(size_) + ".ply");
@@ -262,7 +274,7 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
     resolution_bits = static_cast<char16_t>(size_);
   }
 
-  // #pragma omp parallel for schedule(dynamic)
+  #pragma omp parallel for num_threads(5) schedule(dynamic)
   for (unsigned int y = 0; y < size_; y++) {
     std::vector<Voxel> voxels(size_*size_);
     #pragma omp parallel for schedule(dynamic)
@@ -384,15 +396,15 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
 
         // saveSliceAsHEC_Mod_Enc(voxels, y);
 
-        #pragma omp section
-        {
-          saveSliceAsHEC_Mod_Slice(voxels, y);
-        }
+        // #pragma omp section
+        // {
+        //   saveSliceAsHEC_Mod_Slice(voxels, y);
+        // }
 
-        #pragma omp section 
-        {
-          saveSliceAsHEC_Mod_RLE(voxels, y);
-        }
+        // #pragma omp section 
+        // {
+        //   saveSliceAsHEC_Mod_RLE(voxels, y);
+        // }
       }
     }
 
@@ -415,7 +427,9 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
 void Grid::saveSliceAsPNG(std::vector<Voxel> &voxels, uint y) {
 
   std::vector<unsigned char> image(size_*size_*4);
+  #pragma omp parallel for
   for (uint x = 0; x < size_; x++) {
+    #pragma omp parallel for
     for (uint z = 0; z < size_; z++) {
       // int index = z * size_+ x;
       unsigned int value = 0;
