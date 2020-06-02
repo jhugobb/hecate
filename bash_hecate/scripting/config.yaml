@@ -1,9 +1,9 @@
 # Configuration of python script for data generation
 output: "output.txt"
-grid_size: [1024, 2048]
+grid_size: [1024]
 calculate_BW: true
 voxelization_tech: 1
-thresh_raycasting: 0.0
+thresh_raycasting: 0.000001
 png: false
 ply: false
 csv: false

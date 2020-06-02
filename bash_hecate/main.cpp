@@ -21,7 +21,7 @@ int main(int argc, char **argv)
 		return -1;
 	} 
 
-	omp_set_num_threads(6);
+	omp_set_num_threads(8);
 
 	//Filename needs to be models/path/to/model
 	std::string filename(argv[1]);

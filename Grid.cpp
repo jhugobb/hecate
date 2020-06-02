@@ -126,7 +126,7 @@ void Grid::calculateBlackWhite(int z,
                                std::vector<Voxel>& voxels, 
                                double threshold) {
   // One row of intersections for each ray
-  std::list<double> intersect_xs;
+  std::vector<double> intersect_xs;
   // random double engine
   float lower_bound = 0.00001f;
   float upper_bound = node_size - 0.00001f;
@@ -162,7 +162,8 @@ void Grid::calculateBlackWhite(int z,
       if (res == Geo::IntersectionResult::INVALID_INTERSECTS || res == Geo::IntersectionResult::INVALID_NOT_INTERSECTS) {
         if (num_tries < 3)
           break;
-        else res = static_cast<Geo::IntersectionResult>(res - 2);
+        // else res = static_cast<Geo::IntersectionResult>(res - 2);
+        else res = Geo::IntersectionResult::INTERSECTS;
       }
       intersects = res == Geo::IntersectionResult::INTERSECTS;
 
@@ -178,25 +179,25 @@ void Grid::calculateBlackWhite(int z,
       done = true;
   }
 
-  intersect_xs.unique(close_enough);
+  // intersect_xs.unique(close_enough);
 
 
-  std::vector<double> ints(intersect_xs.size());
-  uint i = 0;
-  for (double d : intersect_xs) {
-    ints[i++] = d;
-  }
+  // std::vector<double> ints(intersect_xs.size());
+  // uint i = 0;
+  // for (double d : intersect_xs) {
+  //   ints[i++] = d;
+  // }
 
   // sort them in ascending X order
-  std::sort(ints.begin(), ints.end());
+  std::sort(intersect_xs.begin(), intersect_xs.end());
 
 
   // Number of intersection so far
   uint x_idx = 0;
   for (uint x = 0; x < size_; x++) {
     if (voxels[z * size_ + x].color == VoxelColor::GRAY) continue;
-    double x_coord = space.minPoint.x + (x) * node_size;
-    while (x_idx < ints.size() && x_coord > ints[x_idx]) x_idx++;
+    double x_coord = space.minPoint.x + x * node_size;
+    while (x_idx < intersect_xs.size() && x_coord > intersect_xs[x_idx]) x_idx++;
     // If number of intersections so far is odd , we are inside the model
     if (x_idx % 2 == 1){
         voxels[z * size_ + x].color = VoxelColor::BLACK;
@@ -274,7 +275,7 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
     resolution_bits = static_cast<char16_t>(size_);
   }
 
-  #pragma omp parallel for num_threads(5) schedule(dynamic)
+  // #pragma omp parallel for num_threads(5) schedule(dynamic)
   for (unsigned int y = 0; y < size_; y++) {
     std::vector<Voxel> voxels(size_*size_);
     #pragma omp parallel for schedule(dynamic)
@@ -373,38 +374,29 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
       #pragma omp parallel sections
       {
         // Write Hecate (binary file)
-        // saveSliceAsHEC(voxels, y);
-        // #pragma omp section 
-        // {
-        //   saveSliceAsHEC_RLE_Naive_8b(voxels,  y);
-        // }
-
-        // #pragma omp section 
-        // {
-        //   saveSliceAsHEC_RLE_Naive_16b(voxels, y);
-        // }
+        #pragma omp section
+        saveSliceAsHEC(voxels, y);
+        
+        #pragma omp section 
+        saveSliceAsHEC_RLE_Naive_8b(voxels,  y);
 
         #pragma omp section 
-        {
-          saveSliceAsHEC_RLE_Alt_8b(voxels, y);
-        }
+        saveSliceAsHEC_RLE_Naive_16b(voxels, y);
 
-        // #pragma omp section 
-        // {
-        //   saveSliceAsHEC_RLE_Alt_16b(voxels, y);
-        // }
+        #pragma omp section 
+        saveSliceAsHEC_RLE_Alt_8b(voxels, y);
 
-        // saveSliceAsHEC_Mod_Enc(voxels, y);
+        #pragma omp section 
+        saveSliceAsHEC_RLE_Alt_16b(voxels, y);
 
-        // #pragma omp section
-        // {
-        //   saveSliceAsHEC_Mod_Slice(voxels, y);
-        // }
+        #pragma omp section
+        saveSliceAsHEC_Mod_Enc(voxels, y);
 
-        // #pragma omp section 
-        // {
-        //   saveSliceAsHEC_Mod_RLE(voxels, y);
-        // }
+        #pragma omp section
+        saveSliceAsHEC_Mod_Slice(voxels, y);
+
+        #pragma omp section 
+        saveSliceAsHEC_Mod_RLE(voxels, y);
       }
     }
 
