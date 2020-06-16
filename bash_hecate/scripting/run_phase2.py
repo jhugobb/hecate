@@ -32,7 +32,7 @@ def main():
       total_time_7z = 0.0
       total_time_gz = 0.0
       for candidate_file in os.listdir(folder+"/"+filename):
-        if candidate_file.endswith(".hec"):
+        if candidate_file.endswith(".hec") or candidate_file.endswith(".png"):
           # print("Running " + filename+"/"+candidate_file)
 
           start_7z = time.clock_gettime(time.CLOCK_REALTIME)
@@ -46,7 +46,7 @@ def main():
 
           start_gz = time.clock_gettime(time.CLOCK_REALTIME)
           if use_gzip:
-            cmd_str = "gzip -ck " + os.path.relpath(folder+"/"+filename+"/"+candidate_file) + " > " + folder+"/"+filename+"/"+candidate_file[:-4] + ".gz " 
+            cmd_str = "gzip -ckN " + os.path.relpath(folder+"/"+filename+"/"+candidate_file) + " > " + folder+"/"+filename+"/"+candidate_file[:-4] + ".gz " 
             if subprocess.call(cmd_str,stdout=outputfile_stream, shell=True) != 0:
               print("Error when running " + candidate_file +"!")
               exit(2)
@@ -59,14 +59,26 @@ def main():
 
       if (os.listdir(folder+"/"+filename)):
         hec_files = glob.glob(folder+"/"+filename+"/*.hec")
+        if len(hec_files) != 0:
+          if subprocess.call("mkdir " + folder+"/"+filename+"/hec ", stdout=outputfile_stream, shell=True) != 0:
+            print("Error while trying to create folders!")
+            exit(2)
+          if subprocess.call(['mv'] + hec_files + [folder+"/"+filename+"/hec"], stdout=outputfile_stream) != 0:
+            print("Error while trying to move hec!")
+            exit(2)
+
+        png_files = glob.glob(folder+"/"+filename+"/*.png")
+        if len(png_files) != 0:
+          if subprocess.call("mkdir " + folder+"/"+filename+"/png ", stdout=outputfile_stream, shell=True) != 0:
+            print("Error while trying to create folders!")
+            exit(2)
+          if subprocess.call(['mv'] + png_files + [folder+"/"+filename+"/png"], stdout=outputfile_stream) != 0:
+            print("Error while trying to move hec!")
+            exit(2)
         z7_files = glob.glob(folder+"/"+filename+"/*.7z")
         gz_files = glob.glob(folder+"/"+filename+"/*.gz")
-        if subprocess.call("mkdir " + folder+"/"+filename+"/hec " + folder+"/"+filename+"/7z " + folder+"/"+filename+"/gz", stdout=outputfile_stream, shell=True) != 0:
+        if subprocess.call("mkdir " + folder+"/"+filename+"/7z " + folder+"/"+filename+"/gz", stdout=outputfile_stream, shell=True) != 0:
           print("Error while trying to create folders!")
-          exit(2)
-          "mv " + hec_files + " " + folder+"/"+filename+"/hec"
-        if subprocess.call(['mv'] + hec_files + [folder+"/"+filename+"/hec"], stdout=outputfile_stream) != 0:
-          print("Error while trying to move hec!")
           exit(2)
         if subprocess.call(['mv'] + z7_files + [folder+"/"+filename+"/7z"], stdout=outputfile_stream) != 0:
           print("Error while trying to move 7z!")

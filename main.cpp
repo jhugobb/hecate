@@ -143,7 +143,7 @@ static void idleCallback()
 int main(int argc, char **argv)
 {
 
-	omp_set_num_threads(8);
+	// omp_set_num_threads(8);
 	// GLUT initialization
 	glutInit(&argc, argv);
 	glutInitContextVersion(3,3);
