@@ -206,8 +206,6 @@ void Grid::calculateBlackWhite(int z,
 }
 
 void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string filename) {
-  // std::vector<Triangle*> triangles = mesh->getTriangles();
-  // std::vector<glm::vec3> vertices = mesh->getVertices();
   // For PLY writing
   std::ofstream out_fobj;
   std::streampos file_verts_line;
@@ -216,12 +214,7 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
   boost::filesystem::path dir(filename + "_" + std::to_string(size_));
   boost::filesystem::create_directory(dir);
 
-  // For Binary file writing
-  // std::ofstream bin_file_normal;
-  // std::ofstream bin_file_rle_naive_8;
-  // std::ofstream bin_file_rle_naive_16;
-  // std::ofstream bin_file_rle_alternated_8;
-  // std::ofstream bin_file_rle_alternated_16;
+
 
   filename_ = filename;
 
@@ -275,7 +268,17 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
     resolution_bits = static_cast<char16_t>(size_);
   }
 
-  // #pragma omp parallel for num_threads(10) schedule(dynamic)
+  if (config.writePNG) {
+    boost::filesystem::path dir_png(filename + "_" + std::to_string(size_) + "/PNG");
+    boost::filesystem::create_directory(dir_png);
+  }
+
+  if (config.writeCSV) {
+    boost::filesystem::path dir_csv(filename + "_" + std::to_string(size_) + "/CSV");
+    boost::filesystem::create_directory(dir_csv);
+  }
+
+  #pragma omp parallel for num_threads(4) schedule(dynamic)
   for (unsigned int y = 0; y < size_; y++) {
     std::vector<Voxel> voxels(size_*size_);
     #pragma omp parallel for schedule(dynamic)
@@ -295,6 +298,7 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
       // If the node has triangles
       if (quad_node->members.size() != 0) {
         if (!config.useNaive && !config.useBox) {
+          qt->buildBinTree(y, z);
           nods = quad_node->bin_tree;
           list_it = nods.begin();
         }
@@ -361,6 +365,12 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
           }
         }
 
+        if (!config.useNaive && !config.useBox) {
+          for (BinTreeNode* bn : nods) 
+            delete bn;
+          nods.clear();
+        }
+
         if (config.calculate_black_white) {
             calculateBlackWhite(z, coords, quad_node, voxels, config.threshold_raycasting);
         }
@@ -374,29 +384,29 @@ void Grid::colorGrid(TwoDGrid* qt, ColoringConfiguration config, std::string fil
       #pragma omp parallel sections
       {
         // Write Hecate (binary file)
-        #pragma omp section
-        saveSliceAsHEC(voxels, y);
+        // #pragma omp section
+        // saveSliceAsHEC(voxels, y);
         
-        #pragma omp section 
-        saveSliceAsHEC_RLE_Naive_8b(voxels,  y);
+        // #pragma omp section 
+        // saveSliceAsHEC_RLE_Naive_8b(voxels,  y);
 
         #pragma omp section 
         saveSliceAsHEC_RLE_Naive_16b(voxels, y);
 
-        #pragma omp section 
-        saveSliceAsHEC_RLE_Alt_8b(voxels, y);
+        // #pragma omp section 
+        // saveSliceAsHEC_RLE_Alt_8b(voxels, y);
 
-        #pragma omp section 
-        saveSliceAsHEC_RLE_Alt_16b(voxels, y);
+        // #pragma omp section 
+        // saveSliceAsHEC_RLE_Alt_16b(voxels, y);
 
-        #pragma omp section
-        saveSliceAsHEC_Mod_Enc(voxels, y);
+        // #pragma omp section
+        // saveSliceAsHEC_Mod_Enc(voxels, y);
 
-        #pragma omp section
-        saveSliceAsHEC_Mod_Slice(voxels, y);
+        // #pragma omp section
+        // saveSliceAsHEC_Mod_Slice(voxels, y);
 
-        #pragma omp section 
-        saveSliceAsHEC_Mod_RLE(voxels, y);
+        // #pragma omp section 
+        // saveSliceAsHEC_Mod_RLE(voxels, y);
       }
     }
 
@@ -437,22 +447,10 @@ void Grid::saveSliceAsPNG(std::vector<Voxel> &voxels, uint y) {
     }
   }
 
-  // we're going to encode with a state rather than a convenient function, because enforcing a color type requires setting options
-  // lodepng::State state;
-  // // input color type
-  // state.info_raw.colortype = LCT_GREY;
-  // state.info_raw.bitdepth = 1;
-  // // output color type
-  // state.info_png.color.colortype = LCT_GREY;
-  // state.info_png.color.bitdepth = 1;
-  // state.encoder.auto_convert = 0; 
-  // std::vector<unsigned char> buffer;
-  // unsigned error = lodepng::encode(buffer, &image[0], size_, size_ , state);
-
-  std::string filename = "slices/slice_";
-  filename.append(std::to_string(y));
-  filename.append(".png");
-  unsigned error = lodepng::encode(filename, &image[0], size_, size_);
+  std::string file = filename_ + "_" + std::to_string(size_) + "/PNG/slice_";
+  file.append(std::to_string(y));
+  file.append(".png");
+  unsigned error = lodepng::encode(file, &image[0], size_, size_);
 
 
   //if there's an error, display it
@@ -506,30 +504,41 @@ void Grid::calculateStatistics(std::vector<Voxel> &voxels, int y) {
 }
 
 void Grid::writeCSV(std::string filename) {
-  std::ofstream out_csv("runs_"+ filename  + "_" + std::to_string(size_) + ".csv");
-  
+  std::ofstream out_csv(filename_ + "_" + std::to_string(size_) + "/CSV/runs_" + std::to_string(size_) + ".csv");
+  cout << filename_ + "_" + std::to_string(size_) + "/CSV/runs_" + std::to_string(size_) + ".csv" << endl;
+  assert(out_csv.is_open());
   uint max = std::max(white_runs.size(), std::max(black_runs.size(), gray_runs.size()));
-
+  float sum_w = 0;
+  float sum_b = 0;
+  float sum_g = 0;
   out_csv << "White Runs,Black Runs,Gray Runs\n";
   for (uint i = 0; i < max; i++) {
     if (i < white_runs.size()) {
       out_csv << std::to_string(white_runs[i]);
+      sum_w += white_runs[i];
     }
     out_csv << ",";
 
     if (i < black_runs.size()) {
       out_csv << std::to_string(black_runs[i]);
+      sum_b += black_runs[i];
     }
     out_csv << ",";
 
     if (i < gray_runs.size()) {
       out_csv << std::to_string(gray_runs[i]);
+      sum_g += gray_runs[i];
     }
     out_csv << "\n";
   }
   out_csv.close();
-
-  std::ofstream out_csv_slice("similarities_" + filename + "_" + std::to_string(size_) + ".csv");
+  float avg_b = sum_b / black_runs.size();
+  float avg_w = sum_w / white_runs.size();
+  float avg_g = sum_g / gray_runs.size();
+  cout << "Avg W: " << avg_w << endl;
+  cout << "Avg B: " << avg_b << endl;
+  cout << "Avg G: " << avg_g << endl;
+  std::ofstream out_csv_slice(filename_ + "_" + std::to_string(size_) + "/CSV/similarities_" + std::to_string(size_) + ".csv");
   out_csv_slice << "Number of slice,Percentage of similarity\n";
 
   for (uint i = 0; i < similarPercents.size(); i++) {

@@ -230,9 +230,9 @@ void Scene::render_gui()
 			default:
 				// Bin Tree
 				clock_gettime(CLOCK_REALTIME, &begin_bt);
-				twodgrid->buildBinTrees();
+				twodgrid->saveMinXs();
 				clock_gettime(CLOCK_REALTIME, &end_bt);
-				std::cout << "Finished Bin Tree Creation in " << end_bt.tv_sec - begin_bt.tv_sec + ((end_bt.tv_nsec - begin.tv_nsec) / 1E9)<< " s." << std::endl;
+				std::cout << "Finished saving min xs in " << end_bt.tv_sec - begin_bt.tv_sec + ((end_bt.tv_nsec - begin.tv_nsec) / 1E9)<< " s." << std::endl;
 				config.useNaive = false;
 				config.useBox = false;
 				break;

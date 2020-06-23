@@ -33,10 +33,6 @@ TwoDGrid::TwoDGrid(TriangleMesh* m_, int size, Geo::BBox space_) : triangles(m_-
 
 TwoDGrid::~TwoDGrid() {
   for (int i = 0; i < num_nodes*num_nodes; i++) {
-    for (BinTreeNode* btn : grid[i]->bin_tree) {
-      delete btn;
-    }
-    grid[i]->bin_tree.clear();
     delete grid[i];
   }
   delete[] grid;
@@ -80,22 +76,19 @@ void TwoDGrid::insert(int t) {
 
 }
 
-void TwoDGrid::buildBinTrees() {
+void TwoDGrid::saveMinXs() {
 
-  #pragma omp parallel
+  #pragma omp parallel for
   for (uint i = 0; i < triangles.size(); i++) {
     triangles[i]->saveMinX(m);
   }
-  #pragma omp parallel for
-  for (int y = 0; y < num_nodes; y++) {
-    #pragma omp parallel for
-    for (int z = 0; z < num_nodes; z++) {
-      int key = y*num_nodes + z;
-      // If node has triangles, calculate its bin tree
-      if (grid[key]->members.size() != 0)
-        grid[key]->build_bin_tree(m, space, node_size);
-    }
-  }
+}
+
+void TwoDGrid::buildBinTree(int y, int z) {
+  int key = y*num_nodes + z;
+  // If node has triangles, calculate its bin tree
+  if (grid[key]->members.size() != 0)
+    grid[key]->build_bin_tree(m, space, node_size);
 }
 
 node* TwoDGrid::query(glm::vec2 coords) {

@@ -74,7 +74,9 @@ class TwoDGrid {
     /**
      * Creates the X-Bin-trees of all the nodes
      */ 
-    void buildBinTrees();
+    void buildBinTree(int y, int z);
+
+    void saveMinXs();
 
   private:
     // Array of nodes of the 2Dgrid

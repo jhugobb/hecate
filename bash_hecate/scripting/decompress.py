@@ -42,8 +42,12 @@ def main():
               total_time_7z += end_7z - start_7z
           print("7z of " + folder+"/"+filename + " was " + str(total_time_7z))
           hec_files = glob.glob(folder+"/"+filename+"/"+candidate_file+"/*.hec")
-          if subprocess.call(['rm'] + hec_files, stdout=outputfile_stream) != 0:
+          png_files = glob.glob(folder+"/"+filename+"/"+candidate_file+"/*.png")
+          if len(hec_files) != 0 and subprocess.call(['rm'] + hec_files, stdout=outputfile_stream) != 0:
             print("Error while trying to remove hec!")
+            exit(2)
+          if len(png_files) != 0 and subprocess.call(['rm'] + png_files, stdout=outputfile_stream) != 0:
+            print("Error while trying to remove png!")
             exit(2)
         elif os.listdir(folder+"/"+filename+"/"+candidate_file) and candidate_file == "gz":
           print("Running gz for " + filename)
@@ -59,8 +63,12 @@ def main():
               total_time_gz += end_gz - start_gz
           print("gz of " + folder+"/"+filename + " was " + str(total_time_gz))
           hec_files = glob.glob(folder+"/"+filename+"/"+candidate_file+"/*.hec")
-          if subprocess.call(['rm'] + hec_files, stdout=outputfile_stream) != 0:
+          png_files = glob.glob(folder+"/"+filename+"/"+candidate_file+"/*.png")
+          if len(hec_files) != 0 and subprocess.call(['rm'] + hec_files, stdout=outputfile_stream) != 0:
             print("Error while trying to remove hec!")
+            exit(2)
+          if len(png_files) != 0 and subprocess.call(['rm'] + png_files, stdout=outputfile_stream) != 0:
+            print("Error while trying to remove png!")
             exit(2)
         else:
           continue
